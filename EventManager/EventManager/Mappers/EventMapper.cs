@@ -1,4 +1,5 @@
-﻿using EventManager.Models;
+﻿using EventManager.DTOs;
+using EventManager.Models;
 
 namespace EventManager.Mappers
 {

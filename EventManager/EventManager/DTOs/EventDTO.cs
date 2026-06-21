@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EventManager.Models
+namespace EventManager.DTOs
 {
     public class EventDTO : IValidatableObject
     {
@@ -9,7 +9,7 @@ namespace EventManager.Models
 
         [Required(ErrorMessage = "Заголовок события обязателен для заполнения.")]
         public string Title { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Поле 'StartAt' обязательно для заполнения.")]
         public DateTime StartAt { get; set; }
@@ -21,7 +21,7 @@ namespace EventManager.Models
         {
             if (EndAt <= StartAt)
             {
-                yield return new ValidationResult("EndAt не может быть позже StartAt.", new[] { nameof(EndAt) });
+                yield return new ValidationResult("EndAt должна быть позже StartAt.", new[] { nameof(EndAt) });
             }
         }
     }

@@ -4,6 +4,7 @@ using EventManager.Mappers;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using EventManager.DTOs;
 
 namespace EventManager.Controllers
 {
@@ -40,12 +41,13 @@ namespace EventManager.Controllers
         public IActionResult Post([FromBody] EventDTO newEvent)
         {
             var result = _eventService.AddEvent(newEvent.ToEntity());
-            return new CreatedResult("/Events", _eventService.GetEvent(result.Id));
+            return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
         }
 
         [HttpPut("{id:int}")]
         public IActionResult Put(int id, [FromBody] EventDTO newEvent)
         {
+            newEvent.Id = id;
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
             if (!result)
                 return NotFound();

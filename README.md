@@ -47,7 +47,7 @@ POST /events
 }
 
 Обновить мероприятие
-PUT /events
+PUT /events/{id}
 
 Удалить мероприятие
 DELETE /events/{id}
