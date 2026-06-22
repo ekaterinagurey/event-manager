@@ -19,10 +19,10 @@ namespace EventManager.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Event>> GetAll()
+        public ActionResult<IEnumerable<Event>> GetAll([FromQuery] GetEventsRequestDTO filter)
         {
             // Получаем все 
-            return Ok(_eventService.GetEvents());
+            return Ok(_eventService.GetEvents(filter));
         }
 
         [HttpGet("{id:int}")]

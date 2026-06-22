@@ -1,4 +1,5 @@
-﻿using EventManager.Exceptions;
+﻿using EventManager.DTOs;
+using EventManager.Exceptions;
 using EventManager.Interfaces;
 using EventManager.Models;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,27 @@ namespace EventManager.Services
         public IEnumerable<Event> GetEvents()
         {
             return _events;
+        }
+        public IEnumerable<Event> GetEvents(GetEventsRequestDTO filter)
+        {
+            var query = _events.AsEnumerable();
+
+            if(!string.IsNullOrWhiteSpace(filter.Title))
+            {
+                query = query.Where(x => x.Title.Contains(filter.Title, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (filter.From.HasValue)
+            {
+                query = query.Where(x => x.StartAt >= filter.From.Value);
+            }
+
+            if (filter.To.HasValue)
+            {
+                query = query.Where(x => x.EndAt <= filter.To.Value);
+            }
+
+            return query;
         }
 
         public Event? GetEvent(int id)
