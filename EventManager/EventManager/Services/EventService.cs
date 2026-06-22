@@ -14,7 +14,7 @@ namespace EventManager.Services
         {
             return _events;
         }
-        public IEnumerable<Event> GetEvents(GetEventsRequestDTO filter)
+        public PaginateResultDTO<Event> GetEvents(GetEventsRequestDTO filter)
         {
             var query = _events.AsEnumerable();
 
@@ -33,7 +33,20 @@ namespace EventManager.Services
                 query = query.Where(x => x.EndAt <= filter.To.Value);
             }
 
-            return query;
+            var totalItems = query.Count();
+
+            var items = query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToList();
+
+            return new PaginateResultDTO<Event>
+            {
+                TotalCount = totalItems,
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+                Items = items
+            };
         }
 
         public Event? GetEvent(int id)

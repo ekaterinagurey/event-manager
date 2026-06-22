@@ -19,9 +19,8 @@ namespace EventManager.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Event>> GetAll([FromQuery] GetEventsRequestDTO filter)
+        public ActionResult<PaginateResultDTO<Event>> GetAll([FromQuery] GetEventsRequestDTO filter)
         {
-            // Получаем все 
             return Ok(_eventService.GetEvents(filter));
         }
 
