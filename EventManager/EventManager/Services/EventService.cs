@@ -1,4 +1,5 @@
-﻿using EventManager.Interfaces;
+﻿using EventManager.Exceptions;
+using EventManager.Interfaces;
 using EventManager.Models;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +16,11 @@ namespace EventManager.Services
 
         public Event? GetEvent(int id)
         {
-            return _events.FirstOrDefault(x => x.Id == id);
+            var eventEntity = _events.FirstOrDefault(x => x.Id == id);
+
+            if (eventEntity == null)
+                throw new NotFoundException($"Событие с id = {id} не найдено.");
+            return eventEntity;
         }
 
         public Event AddEvent(Event newEvent)
@@ -29,7 +34,9 @@ namespace EventManager.Services
             var exitingEvent = GetEvent(id);
 
             if (exitingEvent == null)
-                return false;
+            {
+                throw new NotFoundException($"Событие с id = {id} не найдено.");
+            }
 
             var index = _events.IndexOf(exitingEvent);
             _events[index] = editingEvent;
@@ -42,7 +49,7 @@ namespace EventManager.Services
             var exitingEvent = GetEvent(id);
 
             if (exitingEvent == null)
-                return false;
+                throw new NotFoundException($"Событие с id = {id} не найдено.");
 
             _events.Remove(exitingEvent);
             return true;

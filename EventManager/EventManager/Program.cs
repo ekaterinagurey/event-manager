@@ -1,4 +1,5 @@
 using EventManager.Interfaces;
+using EventManager.Middleware;
 using EventManager.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
