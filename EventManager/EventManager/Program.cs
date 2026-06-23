@@ -11,6 +11,25 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
 
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage);
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Detail = string.Join("; ", errors)
+        };
+
+        return new BadRequestObjectResult(problemDetails);
+    };
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
