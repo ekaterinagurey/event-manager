@@ -1,6 +1,7 @@
 ﻿using EventManager.DTOs;
 using EventManager.Exceptions;
 using EventManager.Interfaces;
+using EventManager.Mappers;
 using EventManager.Models;
 using Microsoft.Extensions.Logging;
 

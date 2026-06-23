@@ -2,12 +2,7 @@
 using EventManager.Exceptions;
 using EventManager.Models;
 using EventManager.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EventManager.Tests.Helpers;
 
 namespace EventManager.Tests
 {
@@ -186,7 +181,6 @@ namespace EventManager.Tests
                     StartAt = new DateTime(2026, 7, 23),
                     EndAt = new DateTime(2026, 7, 24)
                 });
-
             }
 
             //Act
@@ -223,6 +217,45 @@ namespace EventManager.Tests
 
             //Assert
             Assert.Single(result.Items);
+        }
+
+        // Тест проверяет получение события с несуществующим ID
+        [Fact]
+        public void GetEvent_SchouldThrowNotFoundException()
+        {
+            Assert.Throws<NotFoundException>(() => _service.GetEvent(999));
+        }
+
+        // Тест проверяет обновление событие с несуществующим ID
+        [Fact]
+        public void ChangeEvent_SchouldThrowNotFoundException()
+        {
+            var newEvent = _service.AddEvent(new Event
+            {
+                Id = 1,
+                Title = "Event new",
+                StartAt = new DateTime(2026, 7, 23),
+                EndAt = new DateTime(2026, 7, 24)
+            });
+
+            Assert.Throws<NotFoundException>(() => _service.ChangeEvent(999, newEvent));
+        }
+
+        // Тест проверяет создание события с некорректными данными
+        [Fact]
+        public void AddEvent_SchouldThrowNotValidateException_WhenEndAtEarlierThenStartAt()
+        {
+            var newEvent = new EventDTO
+            {
+                Id = 1,
+                Title = "Event new",
+                StartAt = new DateTime(2026, 7, 2),
+                EndAt = new DateTime(2026, 7, 1)
+            };
+
+            var results = ValidationHelper.ValidateModel(newEvent);
+            Assert.NotEmpty(results);
+            Assert.Contains(results, r => r.MemberNames.Contains(nameof(newEvent.EndAt)));
         }
     }
 }
