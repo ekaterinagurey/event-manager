@@ -26,7 +26,7 @@ http://localhost:<port>
 
 Для запуска всех тестов выполните:
 
-dotnet test EventManager\EventManager\EventManager.csproj 
+dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
 
 # Swagger
 
@@ -77,9 +77,8 @@ DELETE /events/{id}
 Возвращается при ошибках валидации.
 
 {
-  "title": "Bad request",
   "status": 400,
-  "detail": "Validation failed"
+  "detail": "EndAt должна быть позже StartAt."
 }
 ### 404 Not Found
 

@@ -19,7 +19,7 @@ namespace EventManager.Services
         {
             var query = _events.AsEnumerable();
 
-            if(!string.IsNullOrWhiteSpace(filter.Title))
+            if (!string.IsNullOrWhiteSpace(filter.Title))
             {
                 query = query.Where(x => x.Title.Contains(filter.Title, StringComparison.OrdinalIgnoreCase));
             }
@@ -37,14 +37,14 @@ namespace EventManager.Services
             var totalItems = query.Count();
 
             var items = query
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .ToList();
 
             return new PaginateResultDTO<Event>
             {
                 TotalCount = totalItems,
-                PageNumber = filter.PageNumber,
+                Page = filter.Page,
                 PageSize = filter.PageSize,
                 Items = items
             };
@@ -61,6 +61,15 @@ namespace EventManager.Services
 
         public Event AddEvent(Event newEvent)
         {
+            if (newEvent.Id <= 0)
+                throw new ArgumentException("Идентификатор события обязателен для заполнения.");
+
+            if (string.IsNullOrWhiteSpace(newEvent.Title))
+                throw new ArgumentException("Заголовок события обязателен для заполнения.");
+
+            if (newEvent.EndAt <= newEvent.StartAt)
+                throw new ArgumentException("EndAt должна быть позже StartAt.");
+
             _events.Add(newEvent);
             return newEvent;
         }
@@ -70,13 +79,19 @@ namespace EventManager.Services
             var exitingEvent = GetEvent(id);
 
             if (exitingEvent == null)
-            {
                 throw new NotFoundException($"Событие с id = {id} не найдено.");
-            }
+
+            if (exitingEvent.Id <= 0)
+                throw new ArgumentException("Идентификатор события обязателен для заполнения.");
+
+            if (string.IsNullOrWhiteSpace(editingEvent.Title))
+                throw new ArgumentException("Заголовок события обязателен для заполнения.");
+
+            if (editingEvent.EndAt <= editingEvent.StartAt)
+                throw new ArgumentException("EndAt должна быть позже StartAt.");
 
             var index = _events.IndexOf(exitingEvent);
             _events[index] = editingEvent;
-
             return true;
         }
 

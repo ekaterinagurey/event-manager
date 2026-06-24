@@ -60,6 +60,7 @@ namespace EventManager.Middleware
             {
                 ValidationException ve => StatusCodes.Status400BadRequest,
                 NotFoundException nfe => StatusCodes.Status404NotFound,
+                ArgumentException are => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

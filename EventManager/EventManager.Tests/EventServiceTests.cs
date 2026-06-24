@@ -2,7 +2,6 @@
 using EventManager.Exceptions;
 using EventManager.Models;
 using EventManager.Services;
-using EventManager.Tests.Helpers;
 
 namespace EventManager.Tests
 {
@@ -17,7 +16,7 @@ namespace EventManager.Tests
 
         // Тест проверяет, что метод корректно создает событие
         [Fact]
-        public void AddEvent_SchouldCreateEvents()
+        public void AddEvent_ShouldCreateEvents()
         {
             //Arrange
             var newEvent = new Event
@@ -40,7 +39,7 @@ namespace EventManager.Tests
 
         // Тест проверяет, что метод возвращает все события
         [Fact]
-        public void GetEvents_SchouldReturnAllEvents()
+        public void GetEvents_ShouldReturnAllEvents()
         {
             //Arrange
             _service.AddEvent(new Event
@@ -60,7 +59,7 @@ namespace EventManager.Tests
 
         // Тест проверяет, что метод возвращает событие по Id
         [Fact]
-        public void GetEvent_SchouldReturnEvent()
+        public void GetEvent_ShouldReturnEvent()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -80,7 +79,7 @@ namespace EventManager.Tests
 
         // Тест проверяет обновление существующего события
         [Fact]
-        public void ChangeEvent_SchouldUpdateExistEvent()
+        public void ChangeEvent_ShouldUpdateExistEvent()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -104,7 +103,7 @@ namespace EventManager.Tests
 
         // Тест проверяет удаление существующего события
         [Fact]
-        public void RemoveEvent_SchouldRemoveEvent()
+        public void RemoveEvent_ShouldRemoveEvent()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -124,7 +123,7 @@ namespace EventManager.Tests
 
         // Тест проверяет получение событий с фильтрацией по названию
         [Fact]
-        public void GetEvents_SchouldFilterByTitle()
+        public void GetEvents_ShouldFilterByTitle()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -146,7 +145,7 @@ namespace EventManager.Tests
 
         // Тест проверяет получение событий с фильтрацией по датам
         [Fact]
-        public void GetEvents_SchouldFilterByDateRange()
+        public void GetEvents_ShouldFilterByDateRange()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -169,7 +168,7 @@ namespace EventManager.Tests
 
         // Тест проверяет получение событий с пагинацией
         [Fact]
-        public void GetEvents_SchouldReturnSecondPage()
+        public void GetEvents_ShouldReturnSecondPage()
         {
             //Arrange
             for (int i = 1; i < 16; i++)
@@ -186,7 +185,7 @@ namespace EventManager.Tests
             //Act
             var result = _service.GetEvents(new GetEventsRequestDTO
             {
-                PageNumber = 2,
+                Page = 2,
                 PageSize = 10
             });
 
@@ -196,7 +195,7 @@ namespace EventManager.Tests
 
         // Тест проверяет получение событий с комбинированной фильтрацией
         [Fact]
-        public void GetEvents_SchouldApplyAllFilters()
+        public void GetEvents_ShouldApplyAllFilters()
         {
             //Arrange
             var created = _service.AddEvent(new Event
@@ -221,14 +220,14 @@ namespace EventManager.Tests
 
         // Тест проверяет получение события с несуществующим ID
         [Fact]
-        public void GetEvent_SchouldThrowNotFoundException()
+        public void GetEvent_ShouldThrowNotFoundException()
         {
             Assert.Throws<NotFoundException>(() => _service.GetEvent(999));
         }
 
         // Тест проверяет обновление событие с несуществующим ID
         [Fact]
-        public void ChangeEvent_SchouldThrowNotFoundException()
+        public void ChangeEvent_ShouldThrowNotFoundException()
         {
             var newEvent = _service.AddEvent(new Event
             {
@@ -243,19 +242,38 @@ namespace EventManager.Tests
 
         // Тест проверяет создание события с некорректными данными
         [Fact]
-        public void AddEvent_SchouldThrowNotValidateException_WhenEndAtEarlierThenStartAt()
+        public void AddEvent_ShouldThrowArgumentException_WhenTitleIsMissing()
         {
-            var newEvent = new EventDTO
+            //Arrange
+            var newEvent = new Event
             {
                 Id = 1,
-                Title = "Event new",
-                StartAt = new DateTime(2026, 7, 2),
-                EndAt = new DateTime(2026, 7, 1)
+                Title = string.Empty,
+                StartAt = new DateTime(2026, 7, 23),
+                EndAt = new DateTime(2026, 7, 24)
             };
 
-            var results = ValidationHelper.ValidateModel(newEvent);
-            Assert.NotEmpty(results);
-            Assert.Contains(results, r => r.MemberNames.Contains(nameof(newEvent.EndAt)));
+            //Act && Assert
+            Assert.Throws<ArgumentException>(() => _service.AddEvent(newEvent));
+        }
+
+        // Тест проверяет обновление события с некорректными датами
+        [Fact]
+        public void ChangeEvent_ShouldThrowArgumentException_WhenEndAtEarlierThenStartAt()
+        {
+            //Arrange
+            var eventItem = _service.AddEvent(new Event
+            {
+                Id = 1,
+                Title = "Event1",
+                StartAt = new DateTime(2026, 7, 23),
+                EndAt = new DateTime(2026, 7, 24)
+            });
+
+            eventItem.EndAt = new DateTime(2026, 7, 22);
+
+            //Act && Assert
+            Assert.Throws<ArgumentException>(() => _service.ChangeEvent(eventItem.Id, eventItem));
         }
     }
 }

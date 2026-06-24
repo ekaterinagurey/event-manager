@@ -28,10 +28,6 @@ namespace EventManager.Controllers
         public ActionResult<Event> GetById(int id)
         {
             var result = _eventService.GetEvent(id);
-
-            if (result is null)
-                return NotFound();
-
             return Ok(result);
         }
 
@@ -48,9 +44,6 @@ namespace EventManager.Controllers
         {
             newEvent.Id = id;
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
-            if (!result)
-                return NotFound();
-
             return Ok(_eventService.GetEvent(id));
         }
 
@@ -58,10 +51,6 @@ namespace EventManager.Controllers
         public IActionResult Delete(int id)
         {
             var result = _eventService.RemoveEvent(id);
-
-            if (!result)
-                return NotFound();
-
             return NoContent();
         }
     }
