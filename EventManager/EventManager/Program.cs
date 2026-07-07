@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IEventService, EventService>();
+builder.Services.AddSingleton<IBookingService, BookingService>();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
