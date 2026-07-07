@@ -19,20 +19,15 @@ namespace EventManager.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Event>> GetAll()
+        public ActionResult<PaginateResultDTO<Event>> GetAll([FromQuery] GetEventsRequestDTO filter)
         {
-            // Получаем все 
-            return Ok(_eventService.GetEvents());
+            return Ok(_eventService.GetEvents(filter));
         }
 
         [HttpGet("{id:int}")]
         public ActionResult<Event> GetById(int id)
         {
             var result = _eventService.GetEvent(id);
-
-            if (result is null)
-                return NotFound();
-
             return Ok(result);
         }
 
@@ -49,9 +44,6 @@ namespace EventManager.Controllers
         {
             newEvent.Id = id;
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
-            if (!result)
-                return NotFound();
-
             return Ok(_eventService.GetEvent(id));
         }
 
@@ -59,10 +51,6 @@ namespace EventManager.Controllers
         public IActionResult Delete(int id)
         {
             var result = _eventService.RemoveEvent(id);
-
-            if (!result)
-                return NotFound();
-
             return NoContent();
         }
     }
