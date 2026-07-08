@@ -1,4 +1,5 @@
 ﻿using EventManager.DTOs;
+using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Models;
 using EventManager.Services;
@@ -21,7 +22,6 @@ namespace EventManager.Tests
             //Arrange
             var newEvent = new Event
             {
-                Id = 1,
                 Title = "New Event",
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
@@ -44,7 +44,6 @@ namespace EventManager.Tests
             //Arrange
             _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddHours(1)
@@ -64,7 +63,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddHours(1)
@@ -84,7 +82,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddHours(1)
@@ -108,7 +105,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddHours(1)
@@ -128,7 +124,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = DateTime.Now,
                 EndAt = DateTime.Now.AddHours(1)
@@ -150,7 +145,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
@@ -175,7 +169,6 @@ namespace EventManager.Tests
             {
                 var created = _service.AddEvent(new Event
                 {
-                    Id = i,
                     Title = $"Event{i}",
                     StartAt = new DateTime(2026, 7, 23),
                     EndAt = new DateTime(2026, 7, 24)
@@ -200,7 +193,6 @@ namespace EventManager.Tests
             //Arrange
             var created = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
@@ -222,7 +214,7 @@ namespace EventManager.Tests
         [Fact]
         public void GetEvent_ShouldThrowNotFoundException()
         {
-            Assert.Throws<NotFoundException>(() => _service.GetEvent(999));
+            Assert.Throws<NotFoundException>(() => _service.GetEvent(new Guid("14ce3d62-ee59-4399-ba23-41fa2a8a2935")));
         }
 
         // Тест проверяет обновление событие с несуществующим ID
@@ -231,13 +223,12 @@ namespace EventManager.Tests
         {
             var newEvent = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event new",
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
             });
 
-            Assert.Throws<NotFoundException>(() => _service.ChangeEvent(999, newEvent));
+            Assert.Throws<NotFoundException>(() => _service.ChangeEvent(new Guid("14ce3d62-ee59-4399-ba23-41fa2a8a2935"), newEvent));
         }
 
         // Тест проверяет создание события с некорректными данными
@@ -247,7 +238,6 @@ namespace EventManager.Tests
             //Arrange
             var newEvent = new Event
             {
-                Id = 1,
                 Title = string.Empty,
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
@@ -264,7 +254,6 @@ namespace EventManager.Tests
             //Arrange
             var eventItem = _service.AddEvent(new Event
             {
-                Id = 1,
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
                 EndAt = new DateTime(2026, 7, 24)
