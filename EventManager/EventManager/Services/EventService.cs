@@ -1,4 +1,4 @@
-﻿using EventManager.DTOs;
+﻿using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Interfaces;
 using EventManager.Mappers;
@@ -50,7 +50,7 @@ namespace EventManager.Services
             };
         }
 
-        public Event? GetEvent(int id)
+        public Event? GetEvent(Guid id)
         {
             var eventEntity = _events.FirstOrDefault(x => x.Id == id);
 
@@ -61,28 +61,24 @@ namespace EventManager.Services
 
         public Event AddEvent(Event newEvent)
         {
-            if (newEvent.Id <= 0)
-                throw new ArgumentException("Идентификатор события обязателен для заполнения.");
-
             if (string.IsNullOrWhiteSpace(newEvent.Title))
                 throw new ArgumentException("Заголовок события обязателен для заполнения.");
 
             if (newEvent.EndAt <= newEvent.StartAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
+            newEvent.Id = Guid.NewGuid();
+
             _events.Add(newEvent);
             return newEvent;
         }
 
-        public bool ChangeEvent(int id, Event editingEvent)
+        public bool ChangeEvent(Guid id, Event editingEvent)
         {
             var exitingEvent = GetEvent(id);
 
             if (exitingEvent == null)
                 throw new NotFoundException($"Событие с id = {id} не найдено.");
-
-            if (exitingEvent.Id <= 0)
-                throw new ArgumentException("Идентификатор события обязателен для заполнения.");
 
             if (string.IsNullOrWhiteSpace(editingEvent.Title))
                 throw new ArgumentException("Заголовок события обязателен для заполнения.");
@@ -95,7 +91,7 @@ namespace EventManager.Services
             return true;
         }
 
-        public bool RemoveEvent(int id)
+        public bool RemoveEvent(Guid id)
         {
             var exitingEvent = GetEvent(id);
 

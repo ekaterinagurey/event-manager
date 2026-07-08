@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EventManager.DTOs
+namespace EventManager.DTOs.Events
 {
     public class EventDTO : IValidatableObject
     {
         [Required(ErrorMessage = "Идентификатор события обязателен для заполнения.")]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required(ErrorMessage = "Заголовок события обязателен для заполнения.")]
         public string Title { get; set; }

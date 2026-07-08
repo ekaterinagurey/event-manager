@@ -1,4 +1,4 @@
-﻿using EventManager.DTOs;
+﻿using EventManager.DTOs.Events;
 using EventManager.Models;
 
 namespace EventManager.Mappers

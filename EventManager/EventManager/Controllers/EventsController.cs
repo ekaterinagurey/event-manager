@@ -1,10 +1,12 @@
-﻿using EventManager.Interfaces;
-using EventManager.Models;
+﻿using EventManager.DTOs.Bookings;
+using EventManager.DTOs.Events;
+using EventManager.Interfaces;
 using EventManager.Mappers;
+using EventManager.Models;
+using EventManager.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using EventManager.DTOs;
 
 namespace EventManager.Controllers
 {
@@ -13,9 +15,11 @@ namespace EventManager.Controllers
     public class EventsController : ControllerBase
     {
         private readonly IEventService _eventService;
-        public EventsController(IEventService eventService)
+        private readonly IBookingService _bookingService;
+        public EventsController(IEventService eventService, IBookingService bookingService)
         {
             _eventService = eventService;
+            _bookingService = bookingService;
         }
 
         [HttpGet]
@@ -25,7 +29,7 @@ namespace EventManager.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<Event> GetById(int id)
+        public ActionResult<Event> GetById(Guid id)
         {
             var result = _eventService.GetEvent(id);
             return Ok(result);
@@ -39,8 +43,8 @@ namespace EventManager.Controllers
             return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
         }
 
-        [HttpPut("{id:int}")]
-        public IActionResult Put(int id, [FromBody] EventDTO newEvent)
+        [HttpPut("{id:guid}")]
+        public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
         {
             newEvent.Id = id;
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
@@ -48,10 +52,20 @@ namespace EventManager.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Guid id)
         {
             var result = _eventService.RemoveEvent(id);
             return NoContent();
+        }
+
+        [HttpPost("{id:guid}/book")]
+        public async Task<ActionResult<BookingResponseDTO>> Book(Guid id)
+        {
+            var booking = await _bookingService.CreateBookingAsync(id);
+            return AcceptedAtAction(nameof(BookingsController.GetById), 
+                                    "Bookings", 
+                                    new { id = booking.Id },
+                                    booking.ToResponse());
         }
     }
 }
