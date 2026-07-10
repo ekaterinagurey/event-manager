@@ -6,5 +6,7 @@ namespace EventManager.Interfaces
     {
         Task<Booking> CreateBookingAsync(Guid eventId);
         Task<Booking> GetBookingByIdAsync(Guid bookingId);
+        Task UpdateBookingAsync(Booking booking);
+        Task<IEnumerable<Booking>> GetPendingBookingAsync();
     }
 }

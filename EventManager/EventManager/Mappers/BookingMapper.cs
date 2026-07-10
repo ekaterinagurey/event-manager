@@ -13,6 +13,7 @@ namespace EventManager.Mappers
                 Id = booking.Id,
                 EventId = booking.EventId,
                 Status = booking.Status,
+                
             };
         }
     }

@@ -1,6 +1,7 @@
 ﻿using EventManager.DTOs.Bookings;
 using EventManager.Interfaces;
 using EventManager.Mappers;
+using EventManager.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.Controllers
@@ -17,10 +18,10 @@ namespace EventManager.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<BookingResponseDTO>> GetById(Guid id)
+        public async Task<ActionResult<Booking>> GetById(Guid id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
-            return Ok(booking.ToResponse());
+            return Ok(booking);
         }
     }
 }

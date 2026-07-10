@@ -28,5 +28,21 @@ namespace EventManager.Services
 
             return await Task.FromResult(booking); 
         }
+
+        public Task UpdateBookingAsync(Booking booking)
+        {
+            var existingBooking = _bookings.FirstOrDefault(x => x.Id == booking.Id)
+                ?? throw new NotFoundException($"Бронирование с id '{booking.Id}' не найдено.");
+
+            existingBooking.Status = booking.Status;
+            existingBooking.ProcessedAt = booking.ProcessedAt;
+            return Task.CompletedTask;
+        }
+
+        public Task<IEnumerable<Booking>> GetPendingBookingAsync()
+        {
+            var pendingBookings = _bookings.Where(x => x.Status == BookingStatus.Pending);
+            return Task.FromResult(pendingBookings);
+        }
     }
 }
