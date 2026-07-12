@@ -9,7 +9,6 @@ namespace EventManager.Mappers
         {
             return new Event
             {
-                Id = eventDTO.Id,
                 Title = eventDTO.Title,
                 Description = eventDTO.Description,
                 StartAt = eventDTO.StartAt,

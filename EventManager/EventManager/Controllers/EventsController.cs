@@ -39,14 +39,13 @@ namespace EventManager.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] EventDTO newEvent)
         {
-            var result = _eventService.AddEvent(newEvent.ToEntity());
+            var result = _eventService.AddEvent(newEvent);
             return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
         }
 
         [HttpPut("{id:guid}")]
         public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
         {
-            newEvent.Id = id;
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
             return Ok(_eventService.GetEvent(id));
         }

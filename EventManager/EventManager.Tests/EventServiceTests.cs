@@ -20,7 +20,7 @@ namespace EventManager.Tests
         public void AddEvent_ShouldCreateEvents()
         {
             //Arrange
-            var newEvent = new Event
+            var newEvent = new EventDTO
             {
                 Title = "New Event",
                 StartAt = new DateTime(2026, 7, 23),
@@ -31,7 +31,6 @@ namespace EventManager.Tests
             var created = _service.AddEvent(newEvent);
 
             //Assert
-            Assert.Equal(newEvent.Id, created.Id);
             Assert.Equal(newEvent.Title, created.Title);
             Assert.Equal(newEvent.StartAt, created.StartAt);
             Assert.Equal(newEvent.EndAt, created.EndAt);
@@ -42,7 +41,7 @@ namespace EventManager.Tests
         public void GetEvents_ShouldReturnAllEvents()
         {
             //Arrange
-            _service.AddEvent(new Event
+            _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
@@ -61,7 +60,7 @@ namespace EventManager.Tests
         public void GetEvent_ShouldReturnEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
@@ -80,7 +79,7 @@ namespace EventManager.Tests
         public void ChangeEvent_ShouldUpdateExistEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
@@ -103,7 +102,7 @@ namespace EventManager.Tests
         public void RemoveEvent_ShouldRemoveEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
@@ -122,7 +121,7 @@ namespace EventManager.Tests
         public void GetEvents_ShouldFilterByTitle()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
@@ -143,7 +142,7 @@ namespace EventManager.Tests
         public void GetEvents_ShouldFilterByDateRange()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
@@ -167,7 +166,7 @@ namespace EventManager.Tests
             //Arrange
             for (int i = 1; i < 16; i++)
             {
-                var created = _service.AddEvent(new Event
+                var created = _service.AddEvent(new EventDTO
                 {
                     Title = $"Event{i}",
                     StartAt = new DateTime(2026, 7, 23),
@@ -191,7 +190,7 @@ namespace EventManager.Tests
         public void GetEvents_ShouldApplyAllFilters()
         {
             //Arrange
-            var created = _service.AddEvent(new Event
+            var created = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
@@ -221,7 +220,7 @@ namespace EventManager.Tests
         [Fact]
         public void ChangeEvent_ShouldThrowNotFoundException()
         {
-            var newEvent = _service.AddEvent(new Event
+            var newEvent = _service.AddEvent(new EventDTO
             {
                 Title = "Event new",
                 StartAt = new DateTime(2026, 7, 23),
@@ -236,7 +235,7 @@ namespace EventManager.Tests
         public void AddEvent_ShouldThrowArgumentException_WhenTitleIsMissing()
         {
             //Arrange
-            var newEvent = new Event
+            var newEvent = new EventDTO
             {
                 Title = string.Empty,
                 StartAt = new DateTime(2026, 7, 23),
@@ -252,7 +251,7 @@ namespace EventManager.Tests
         public void ChangeEvent_ShouldThrowArgumentException_WhenEndAtEarlierThenStartAt()
         {
             //Arrange
-            var eventItem = _service.AddEvent(new Event
+            var eventItem = _service.AddEvent(new EventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),

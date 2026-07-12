@@ -59,7 +59,7 @@ namespace EventManager.Services
             return eventEntity;
         }
 
-        public Event AddEvent(Event newEvent)
+        public Event AddEvent(EventDTO newEvent)
         {
             if (string.IsNullOrWhiteSpace(newEvent.Title))
                 throw new ArgumentException("Заголовок события обязателен для заполнения.");
@@ -67,16 +67,17 @@ namespace EventManager.Services
             if (newEvent.EndAt <= newEvent.StartAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
-            newEvent.Id = Guid.NewGuid();
+            var createdEvent = newEvent.ToEntity();
+            createdEvent.Id = Guid.NewGuid();
 
-            _events.Add(newEvent);
-            return newEvent;
+            _events.Add(createdEvent);
+            return createdEvent;
         }
 
         public bool ChangeEvent(Guid id, Event editingEvent)
         {
             var exitingEvent = GetEvent(id);
-
+            
             if (exitingEvent == null)
                 throw new NotFoundException($"Событие с id = {id} не найдено.");
 
@@ -86,6 +87,7 @@ namespace EventManager.Services
             if (editingEvent.EndAt <= editingEvent.StartAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
+            editingEvent.Id = id;
             var index = _events.IndexOf(exitingEvent);
             _events[index] = editingEvent;
             return true;

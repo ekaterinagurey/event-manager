@@ -23,7 +23,7 @@ namespace EventManager.BackgroudServices
                 foreach (var booking in pendingBooking)
                 {
                     booking.Status = BookingStatus.Confirmed;
-                    booking.ProcessedAt = DateTime.UtcNow;
+                    booking.ProcessedAt = DateTime.Now;
                     await _bookingService.UpdateBookingAsync(booking);
                 }
                 await Task.Delay(2000, stoppingToken);
