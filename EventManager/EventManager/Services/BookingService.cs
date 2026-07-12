@@ -7,15 +7,27 @@ namespace EventManager.Services
     public class BookingService: IBookingService
     {
         private readonly List<Booking> _bookings = [];
+        private readonly IEventService _eventService;
+
+        public BookingService(IEventService eventService)
+        {
+            _eventService = eventService;
+        }
 
         public async Task<Booking> CreateBookingAsync(Guid eventId)
         {
-            var newBooking = new Booking();
-            newBooking.Id = Guid.NewGuid();
-            newBooking.EventId = eventId;
-            newBooking.Status = BookingStatus.Pending;
-            newBooking.CreatedAt = DateTime.Now;
+            var existEvent = _eventService.GetEvent(eventId);
+
+            var newBooking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                EventId = eventId,
+                Status = BookingStatus.Pending,
+                CreatedAt = DateTime.Now
+            };
+
             _bookings.Add(newBooking);
+
             return await Task.FromResult(newBooking); ;
         }
 

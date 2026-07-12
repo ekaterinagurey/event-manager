@@ -1,4 +1,5 @@
 ﻿using EventManager.DTOs.Events;
+using EventManager.Exceptions;
 using EventManager.Models;
 using EventManager.Services;
 using System;
@@ -17,7 +18,7 @@ namespace EventManager.Tests
         public BookingServiceTests()
         {
             _eventService = new EventService();
-            _bookingService = new BookingService();
+            _bookingService = new BookingService(_eventService);
         }
 
         private Event CreateEvent()
@@ -98,6 +99,40 @@ namespace EventManager.Tests
             //Assert
             Assert.Equal(BookingStatus.Confirmed, booking.Status);
             Assert.NotNull(booking.ProcessedAt);
+        }
+
+        // Тест проверяет создание брони для несуществующего события
+        [Fact]
+        public async Task CreateBookingAsync_ShouldThrow_WhenEvenDoesNotExist()
+        {
+            //Arrange
+            var eventId = Guid.NewGuid();
+
+            //Act && Assert
+            await Assert.ThrowsAsync<NotFoundException>(() => _bookingService.CreateBookingAsync(eventId));
+        }
+
+        // Тест проверяет создание брони для удалённого события
+        [Fact]
+        public async Task CreateBookingAsync_ShouldThrow_WhenEvenWasRemoved()
+        {
+            //Arrange
+            var createdEvent = CreateEvent();
+            _eventService.RemoveEvent(createdEvent.Id);
+
+            //Act && Assert
+            await Assert.ThrowsAsync<NotFoundException>(() => _bookingService.CreateBookingAsync(createdEvent.Id));
+        }
+
+        // Тест проверяет получение брони по несуществующему Id
+        [Fact]
+        public async Task GetBookingByIdAsync_ShouldThrow_WhenBookingDoesNotExist()
+        {
+            //Arrange
+            var bookingId = Guid.NewGuid();
+
+            //Act && Assert
+            await Assert.ThrowsAsync<NotFoundException>(() => _bookingService.GetBookingByIdAsync(bookingId));
         }
     }
 }
