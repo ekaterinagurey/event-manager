@@ -1,13 +1,16 @@
+using EventManager.BackgroundServices;
 using EventManager.Interfaces;
 using EventManager.Middleware;
 using EventManager.Services;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddSingleton<IEventService, EventService>();
-builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<IEventService, EventService>();
+builder.Services.AddSingleton<IBookingService, BookingService>();
+builder.Services.AddHostedService<BookingProcessingService>();
+builder.Services.AddOpenApi();
+
 
 builder.Services.AddControllers();
 

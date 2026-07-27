@@ -1,4 +1,4 @@
-﻿using EventManager.DTOs;
+﻿using EventManager.DTOs.Events;
 using EventManager.Models;
 
 namespace EventManager.Mappers
@@ -9,7 +9,6 @@ namespace EventManager.Mappers
         {
             return new Event
             {
-                Id = eventDTO.Id,
                 Title = eventDTO.Title,
                 Description = eventDTO.Description,
                 StartAt = eventDTO.StartAt,

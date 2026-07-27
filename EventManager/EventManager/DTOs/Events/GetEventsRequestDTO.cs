@@ -1,4 +1,4 @@
-﻿namespace EventManager.DTOs
+﻿namespace EventManager.DTOs.Events
 {
     public class GetEventsRequestDTO
     {

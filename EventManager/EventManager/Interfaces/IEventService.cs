@@ -1,4 +1,4 @@
-﻿using EventManager.DTOs;
+﻿using EventManager.DTOs.Events;
 using EventManager.Models;
 namespace EventManager.Interfaces
 {
@@ -6,10 +6,10 @@ namespace EventManager.Interfaces
     {
         IEnumerable<Event> GetEvents();
         PaginateResultDTO<Event> GetEvents(GetEventsRequestDTO filter);
-        Event? GetEvent(int id);
-        Event AddEvent(Event newEvent);
-        bool ChangeEvent(int id, Event editingEvent);
-        bool RemoveEvent(int id);
+        Event? GetEvent(Guid id);
+        Event AddEvent(EventDTO newEvent);
+        bool ChangeEvent(Guid id, Event editingEvent);
+        bool RemoveEvent(Guid id);
 
     }
 }
