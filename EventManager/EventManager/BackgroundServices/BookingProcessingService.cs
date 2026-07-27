@@ -22,6 +22,7 @@ namespace EventManager.BackgroundServices
             while (!stoppingToken.IsCancellationRequested)
             {
                 await ProcessPendingBookingAsync(stoppingToken);
+                await Task.Delay(1000, stoppingToken);
             }
         }
 
