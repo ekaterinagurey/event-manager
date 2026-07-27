@@ -1,4 +1,4 @@
-using EventManager.BackgroudServices;
+using EventManager.BackgroundServices;
 using EventManager.Interfaces;
 using EventManager.Middleware;
 using EventManager.Services;

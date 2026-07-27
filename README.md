@@ -58,7 +58,6 @@ GET /events/{id}
 POST /events
 Тело запроса:
 {
-  "id": 1,
   "title": "event1",
   "description": "string",
   "startAt": "2026-06-14T21:47:09.316Z",

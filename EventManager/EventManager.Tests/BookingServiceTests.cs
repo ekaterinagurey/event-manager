@@ -1,7 +1,12 @@
-﻿using EventManager.DTOs.Events;
+﻿using Castle.Core.Logging;
+using EventManager.BackgroundServices;
+using EventManager.DTOs.Events;
 using EventManager.Exceptions;
+using EventManager.Interfaces;
 using EventManager.Models;
 using EventManager.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -133,6 +138,32 @@ namespace EventManager.Tests
 
             //Act && Assert
             await Assert.ThrowsAsync<NotFoundException>(() => _bookingService.GetBookingByIdAsync(bookingId));
+        }
+
+        // Тест проверяет фоновую обработку бронирований в состоянии pending
+        [Fact]
+        public async Task ProcessPendingBookingAsync_ShouldConfirmPendingBooking()
+        {
+            //Arrange
+            var booking = new Booking { Id = Guid.NewGuid(),
+                                        Status = BookingStatus.Pending,
+                                        CreatedAt = DateTime.Now};
+
+            var bookingService = new Mock<IBookingService>();
+            bookingService.Setup(x => x.GetPendingBookingAsync()).ReturnsAsync(new[] { booking });
+            bookingService.Setup(x => x.UpdateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
+            var logger = new Mock<ILogger<BookingProcessingService>>();
+
+            var service = new BookingProcessingService(bookingService.Object, logger.Object);
+
+            //Act
+            await service.ProcessPendingBookingAsync(CancellationToken.None);
+
+            //Assert
+            Assert.Equal(BookingStatus.Confirmed, booking.Status);
+            Assert.NotNull(booking.ProcessedAt);
+
+            bookingService.Verify(x => x.UpdateBookingAsync(It.IsAny<Booking>()), Times.Once);
         }
     }
 }
