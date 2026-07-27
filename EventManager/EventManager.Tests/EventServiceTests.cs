@@ -1,6 +1,7 @@
 ﻿using EventManager.DTOs;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
+using EventManager.Mappers;
 using EventManager.Models;
 using EventManager.Services;
 
@@ -17,18 +18,19 @@ namespace EventManager.Tests
 
         // Тест проверяет, что метод корректно создает событие
         [Fact]
-        public void AddEvent_ShouldCreateEvents()
+        public void CreateEventAcync_ShouldCreateEvents()
         {
             //Arrange
-            var newEvent = new EventDTO
+            var newEvent = new CreateEventDTO
             {
                 Title = "New Event",
                 StartAt = new DateTime(2026, 7, 23),
-                EndAt = new DateTime(2026, 7, 24)
+                EndAt = new DateTime(2026, 7, 24),
+                TotalSeats = 1
             };
 
             //Act
-            var created = _service.AddEvent(newEvent);
+            var created = _service.CreateEventAcync(newEvent).Result;
 
             //Assert
             Assert.Equal(newEvent.Title, created.Title);
@@ -41,11 +43,12 @@ namespace EventManager.Tests
         public void GetEvents_ShouldReturnAllEvents()
         {
             //Arrange
-            _service.AddEvent(new EventDTO
+            _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddHours(1)
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 1
             });
 
             //Act
@@ -60,12 +63,13 @@ namespace EventManager.Tests
         public void GetEvent_ShouldReturnEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddHours(1)
-            });
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 1
+            }).Result;
 
             //Act
             var result = _service.GetEvent(created.Id);
@@ -79,12 +83,13 @@ namespace EventManager.Tests
         public void ChangeEvent_ShouldUpdateExistEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created =  _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddHours(1)
-            });
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 1
+            }).Result.ToEntity();
 
             created.Title = "New event";
 
@@ -102,12 +107,13 @@ namespace EventManager.Tests
         public void RemoveEvent_ShouldRemoveEvent()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddHours(1)
-            });
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 1
+            }).Result;
 
             //Act
             _service.RemoveEvent(created.Id);
@@ -121,11 +127,12 @@ namespace EventManager.Tests
         public void GetEvents_ShouldFilterByTitle()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = DateTime.Now,
-                EndAt = DateTime.Now.AddHours(1)
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 1 
             });
 
             var filter = new GetEventsRequestDTO { Title = "event" };
@@ -142,11 +149,12 @@ namespace EventManager.Tests
         public void GetEvents_ShouldFilterByDateRange()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
-                EndAt = new DateTime(2026, 7, 24)
+                EndAt = new DateTime(2026, 7, 24),
+                TotalSeats = 1
             });
 
             //Act
@@ -166,11 +174,12 @@ namespace EventManager.Tests
             //Arrange
             for (int i = 1; i < 16; i++)
             {
-                var created = _service.AddEvent(new EventDTO
+                var created = _service.CreateEventAcync(new CreateEventDTO
                 {
                     Title = $"Event{i}",
                     StartAt = new DateTime(2026, 7, 23),
-                    EndAt = new DateTime(2026, 7, 24)
+                    EndAt = new DateTime(2026, 7, 24),
+                    TotalSeats = 1
                 });
             }
 
@@ -190,11 +199,12 @@ namespace EventManager.Tests
         public void GetEvents_ShouldApplyAllFilters()
         {
             //Arrange
-            var created = _service.AddEvent(new EventDTO
+            var created = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
-                EndAt = new DateTime(2026, 7, 24)
+                EndAt = new DateTime(2026, 7, 24),
+                TotalSeats = 1
             });
 
             //Act
@@ -220,22 +230,24 @@ namespace EventManager.Tests
         [Fact]
         public void ChangeEvent_ShouldThrowNotFoundException()
         {
-            var newEvent = _service.AddEvent(new EventDTO
+            var newEvent = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event new",
                 StartAt = new DateTime(2026, 7, 23),
-                EndAt = new DateTime(2026, 7, 24)
-            });
+                EndAt = new DateTime(2026, 7, 24),
+                TotalSeats = 1
+            }).Result;
 
-            Assert.Throws<NotFoundException>(() => _service.ChangeEvent(new Guid("14ce3d62-ee59-4399-ba23-41fa2a8a2935"), newEvent));
+            Assert.Throws<NotFoundException>(() => _service.ChangeEvent(new Guid("14ce3d62-ee59-4399-ba23-41fa2a8a2935"),
+                                                                        newEvent.ToEntity()));
         }
 
         // Тест проверяет создание события с некорректными данными
         [Fact]
-        public void AddEvent_ShouldThrowArgumentException_WhenTitleIsMissing()
+        public async Task CreateEventAcync_ShouldThrowArgumentException_WhenTitleIsMissing()
         {
             //Arrange
-            var newEvent = new EventDTO
+            var newEvent = new CreateEventDTO
             {
                 Title = string.Empty,
                 StartAt = new DateTime(2026, 7, 23),
@@ -243,7 +255,7 @@ namespace EventManager.Tests
             };
 
             //Act && Assert
-            Assert.Throws<ArgumentException>(() => _service.AddEvent(newEvent));
+            await Assert.ThrowsAsync<ArgumentException>(() =>  _service.CreateEventAcync(newEvent));
         }
 
         // Тест проверяет обновление события с некорректными датами
@@ -251,17 +263,18 @@ namespace EventManager.Tests
         public void ChangeEvent_ShouldThrowArgumentException_WhenEndAtEarlierThenStartAt()
         {
             //Arrange
-            var eventItem = _service.AddEvent(new EventDTO
+            var eventItem = _service.CreateEventAcync(new CreateEventDTO
             {
                 Title = "Event1",
                 StartAt = new DateTime(2026, 7, 23),
-                EndAt = new DateTime(2026, 7, 24)
-            });
+                EndAt = new DateTime(2026, 7, 24),
+                TotalSeats = 1
+            }).Result;
 
             eventItem.EndAt = new DateTime(2026, 7, 22);
 
             //Act && Assert
-            Assert.Throws<ArgumentException>(() => _service.ChangeEvent(eventItem.Id, eventItem));
+            Assert.Throws<ArgumentException>(() => _service.ChangeEvent(eventItem.Id, eventItem.ToEntity()));
         }
     }
 }

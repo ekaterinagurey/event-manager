@@ -28,7 +28,7 @@ namespace EventManager.Controllers
             return Ok(_eventService.GetEvents(filter));
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:Guid}")]
         public ActionResult<Event> GetById(Guid id)
         {
             var result = _eventService.GetEvent(id);
@@ -37,20 +37,23 @@ namespace EventManager.Controllers
 
 
         [HttpPost]
-        public IActionResult Post([FromBody] EventDTO newEvent)
+        public async Task<ActionResult<EventInfoDTO>> CreateAsync([FromBody] CreateEventDTO newEvent)
         {
-            var result = _eventService.AddEvent(newEvent);
-            return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
+            var result = await _eventService.CreateEventAcync(newEvent);
+            return CreatedAtAction(nameof(GetById),
+                                   new { id = result.Id },
+                                   result);
+           // return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
         }
 
         [HttpPut("{id:guid}")]
-        public IActionResult Put(Guid id, [FromBody] EventDTO newEvent)
+        public IActionResult Put(Guid id, [FromBody] CreateEventDTO newEvent)
         {
             var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
             return Ok(_eventService.GetEvent(id));
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id:Guid}")]
         public IActionResult Delete(Guid id)
         {
             var result = _eventService.RemoveEvent(id);

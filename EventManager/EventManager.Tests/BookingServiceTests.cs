@@ -26,11 +26,14 @@ namespace EventManager.Tests
             _bookingService = new BookingService(_eventService);
         }
 
-        private Event CreateEvent()
+        private async Task<EventInfoDTO> CreateEventAsync()
         {
-            return _eventService.AddEvent(new EventDTO { Title = "Event 1", 
-                                                      StartAt = DateTime.Now,
-                                                      EndAt = DateTime.Now.AddHours(1)
+            return await _eventService.CreateEventAcync(new CreateEventDTO
+            {
+                Title = "Event 1",
+                StartAt = DateTime.Now,
+                EndAt = DateTime.Now.AddHours(1),
+                TotalSeats = 10
             });
         }
 
@@ -39,7 +42,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldCreateBookingWithPendingStatus()
         {
             //Arrange
-            var newEvent = CreateEvent();
+            var newEvent = CreateEventAsync().Result;
 
             //Act
             var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
@@ -56,7 +59,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldCreateMultipleBookingsForOneEvent()
         {
             //Arrange
-            var newEvent = CreateEvent();
+            var newEvent = CreateEventAsync().Result;
 
             //Act
             var booking1 = await _bookingService.CreateBookingAsync(newEvent.Id);
@@ -71,12 +74,12 @@ namespace EventManager.Tests
         public async Task GetBookingByIdAsync_ShouldReturnBooking()
         {
             //Arrange
-            var newEvent = CreateEvent();
+            var newEvent = CreateEventAsync().Result;
             var createdBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
 
             //Act
             var booking = await _bookingService.GetBookingByIdAsync(createdBooking.Id);
-            
+
 
             //Assert
             Assert.Equal(createdBooking.Id, booking.Id);
@@ -90,7 +93,7 @@ namespace EventManager.Tests
         public async Task GetBookingByIdAsync_ShouldReturnUpdatedStatus()
         {
             //Arrange
-            var newEvent = CreateEvent();
+            var newEvent = CreateEventAsync().Result;
             var createdBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
 
             createdBooking.Status = BookingStatus.Confirmed;
@@ -122,7 +125,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldThrow_WhenEvenWasRemoved()
         {
             //Arrange
-            var createdEvent = CreateEvent();
+            var createdEvent = CreateEventAsync().Result;
             _eventService.RemoveEvent(createdEvent.Id);
 
             //Act && Assert
@@ -145,9 +148,12 @@ namespace EventManager.Tests
         public async Task ProcessPendingBookingAsync_ShouldConfirmPendingBooking()
         {
             //Arrange
-            var booking = new Booking { Id = Guid.NewGuid(),
-                                        Status = BookingStatus.Pending,
-                                        CreatedAt = DateTime.Now};
+            var booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                Status = BookingStatus.Pending,
+                CreatedAt = DateTime.Now
+            };
 
             var bookingService = new Mock<IBookingService>();
             bookingService.Setup(x => x.GetPendingBookingAsync()).ReturnsAsync(new[] { booking });

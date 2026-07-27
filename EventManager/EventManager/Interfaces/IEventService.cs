@@ -7,7 +7,7 @@ namespace EventManager.Interfaces
         IEnumerable<Event> GetEvents();
         PaginateResultDTO<Event> GetEvents(GetEventsRequestDTO filter);
         Event? GetEvent(Guid id);
-        Event AddEvent(EventDTO newEvent);
+        Task<EventInfoDTO> CreateEventAcync(CreateEventDTO newEvent);
         bool ChangeEvent(Guid id, Event editingEvent);
         bool RemoveEvent(Guid id);
 
