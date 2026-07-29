@@ -18,7 +18,6 @@ namespace EventManager.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<Booking>> GetById(Guid id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);

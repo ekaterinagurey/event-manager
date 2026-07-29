@@ -60,6 +60,8 @@ namespace EventManager.Controllers
             return NoContent();
         }
 
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [HttpPost("{id:guid}/book")]
         public async Task<ActionResult<BookingResponseDTO>> Book(Guid id)
         {
