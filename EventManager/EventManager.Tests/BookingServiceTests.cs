@@ -309,5 +309,55 @@ namespace EventManager.Tests
             Assert.NotNull(secondBooking);
             Assert.Equal(newEvent.Id, secondBooking.EventId);
         }
+
+        //Тест на защиту от овербукинга
+        [Fact]
+        public async Task CreateBookingAsync_ShouldPreventOverbooking()
+        {
+            //Arrange
+            var newEvent = await CreateTestEventAsync(5);
+
+            //Act
+            var tasks = Enumerable.Range(0, 20)
+                .Select(async _=>
+                {
+                    try
+                    {
+                        return await _bookingService.CreateBookingAsync(newEvent.Id);
+
+                    }
+                    catch (NoAvailableSeatsException)
+                    {
+                        return null;
+                    }
+                });
+
+            var bookings = await Task.WhenAll(tasks);
+
+            //Assert
+            Assert.Equal(5, bookings.Count(x => x != null));
+            Assert.Equal(15, bookings.Count(x => x == null));
+
+            var entity = _eventService.GetEvent(newEvent.Id);
+            Assert.Equal(0, entity?.AvailableSeats);
+        }
+
+        //Тест на уникальность Id при конкурентных запросах
+        [Fact]
+        public async Task CreateBookingAsync_ShouldCreateUniqueIds()
+        {
+            //Arrange
+            var newEvent = await CreateTestEventAsync(10);
+
+            //Act
+            var tasks = Enumerable.Range(0, 10)
+                .Select(async _ => await _bookingService.CreateBookingAsync(newEvent.Id));
+
+            var bookings = await Task.WhenAll(tasks);
+
+            //Assert
+            Assert.Equal(10, bookings.Length);
+            Assert.Equal(10, bookings.Select(x => x.Id).Distinct().Count());
+        }
     }
 }
