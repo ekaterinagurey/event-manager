@@ -39,7 +39,7 @@ namespace EventManager.Controllers
         [HttpPost]
         public async Task<ActionResult<EventInfoDTO>> CreateAsync([FromBody] CreateEventDTO newEvent)
         {
-            var result = await _eventService.CreateEventAcync(newEvent);
+            var result = await _eventService.CreateEventAsync(newEvent);
             return CreatedAtAction(nameof(GetById),
                                    new { id = result.Id },
                                    result);

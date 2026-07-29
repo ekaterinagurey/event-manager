@@ -59,7 +59,7 @@ namespace EventManager.Services
             return eventEntity;
         }
 
-        public Task<EventInfoDTO> CreateEventAcync(CreateEventDTO newEvent)
+        public Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent)
         {
             if (string.IsNullOrWhiteSpace(newEvent.Title))
                 throw new ArgumentException("Заголовок события обязателен для заполнения.");
@@ -72,10 +72,6 @@ namespace EventManager.Services
                                             newEvent.StartAt,
                                             newEvent.EndAt,
                                             newEvent.TotalSeats);
-
-           // var createdEvent = newEvent.ToEntity();
-           // createdEvent.Id = Guid.NewGuid();
-            //createdEvent.AvailableSeats = newEvent.TotalSeats;
 
             _events.Add(createdEvent);
             return Task.FromResult(createdEvent.ToResponse());
@@ -95,6 +91,8 @@ namespace EventManager.Services
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
             editingEvent.Id = id;
+            editingEvent.AvailableSeats = exitingEvent.AvailableSeats;
+
             var index = _events.IndexOf(exitingEvent);
             _events[index] = editingEvent;
             return true;
