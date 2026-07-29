@@ -3,6 +3,7 @@ using EventManager.BackgroundServices;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Interfaces;
+using EventManager.Mappers;
 using EventManager.Models;
 using EventManager.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -27,7 +28,7 @@ namespace EventManager.Tests
             _bookingService = new BookingService(_eventService);
         }
 
-        private async Task<EventInfoDTO> CreateEventAsync(int totalSeats = 10)
+        private async Task<EventInfoDTO> CreateTestEventAsync(int totalSeats = 10)
         {
             return await _eventService.CreateEventAsync(new CreateEventDTO
             {
@@ -43,7 +44,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldCreateBookingWithPendingStatus()
         {
             //Arrange
-            var newEvent = await CreateEventAsync();
+            var newEvent = await CreateTestEventAsync();
 
             //Act
             var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
@@ -60,7 +61,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldCreateMultipleBookingsForOneEvent()
         {
             //Arrange
-            var newEvent = await CreateEventAsync();
+            var newEvent = await CreateTestEventAsync();
 
             //Act
             var booking1 = await _bookingService.CreateBookingAsync(newEvent.Id);
@@ -75,7 +76,7 @@ namespace EventManager.Tests
         public async Task GetBookingByIdAsync_ShouldReturnBooking()
         {
             //Arrange
-            var newEvent = await CreateEventAsync();
+            var newEvent = await CreateTestEventAsync();
             var createdBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
 
             //Act
@@ -94,7 +95,7 @@ namespace EventManager.Tests
         public async Task GetBookingByIdAsync_ShouldReturnUpdatedStatus()
         {
             //Arrange
-            var newEvent = await CreateEventAsync();
+            var newEvent = await CreateTestEventAsync();
             var createdBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
 
             createdBooking.Status = BookingStatus.Confirmed;
@@ -126,7 +127,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldThrow_WhenEvenWasRemoved()
         {
             //Arrange
-            var createdEvent = await CreateEventAsync();
+            var createdEvent = await CreateTestEventAsync();
             _eventService.RemoveEvent(createdEvent.Id);
 
             //Act && Assert
@@ -186,7 +187,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldDecreaseAvailableSeats()
         {
             //Arrange
-            var newEvent = await CreateEventAsync(5);
+            var newEvent = await CreateTestEventAsync(5);
 
             //Act
             await _bookingService.CreateBookingAsync(newEvent.Id);
@@ -201,7 +202,7 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldCreateBookingsUntilLimit()
         {
             //Arrange
-            var newEvent = await CreateEventAsync(3);
+            var newEvent = await CreateTestEventAsync(3);
 
             //Act
             var bookings = new List<Booking>();
@@ -229,11 +230,84 @@ namespace EventManager.Tests
         public async Task CreateBookingAsync_ShouldThrow_WhenNoSeatsAvailable()
         {
             //Arrange
-            var newEvent = await CreateEventAsync(1);
+            var newEvent = await CreateTestEventAsync(1);
             await _bookingService.CreateBookingAsync(newEvent.Id);
 
             //Act && Assert
             await Assert.ThrowsAsync<NoAvailableSeatsException>(() => _bookingService.CreateBookingAsync(newEvent.Id));
+        }
+
+        //Тест проверяет, что после вызова Confirm() бронь возвращает статус Confirmed и заполненный ProcessedAt
+        [Fact]
+        public async Task Confirm_ShouldChangeStatus()
+        {
+            //Arrange
+            var booking = new Booking { Id = Guid.NewGuid(),
+                                        EventId = Guid.NewGuid(),
+                                        Status = BookingStatus.Pending,
+                                        CreatedAt = DateTime.Now};
+
+            //Act
+            booking.Confirm();
+
+            //Assert
+            Assert.Equal(BookingStatus.Confirmed, booking.Status);
+            Assert.NotNull(booking.ProcessedAt);
+        }
+
+        //Тест проверяет, что после вызова Reject() бронь возвращает статус Rejected и заполненный ProcessedAt
+        [Fact]
+        public void Reject_ShouldChangeStatus()
+        {
+            //Arrange
+            var booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                EventId = Guid.NewGuid(),
+                Status = BookingStatus.Pending,
+                CreatedAt = DateTime.Now
+            };
+
+            //Act
+            booking.Reject();
+
+            //Assert
+            Assert.Equal(BookingStatus.Rejected, booking.Status);
+            Assert.NotNull(booking.ProcessedAt);
+        }
+
+        //Тест проверяет, что после ReleaseSeats() количество свободных мест восстанавливается
+        [Fact]
+        public async Task Reject_ShouldRestorevailableSeats()
+        {
+            //Arrange
+            var newEvent = await CreateTestEventAsync(5);
+            var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
+
+            //Act && Assert
+            var updatedEvent = _eventService.GetEvent(newEvent.Id);
+            Assert.Equal(4, updatedEvent?.AvailableSeats);
+
+            updatedEvent?.ReleaseSeats();
+            Assert.Equal(5, updatedEvent?.AvailableSeats);
+        }
+
+        //Тест проверяет, что после ReleaseSeats() можно успешно создать новую бронь на то же место
+        [Fact]
+        public async Task Reject_ShouldAllowNewBooking()
+        {
+            //Arrange
+            var newEvent = await CreateTestEventAsync(1);
+            var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
+
+            //Act && Assert
+            booking.Reject();
+            var entity = _eventService.GetEvent(newEvent.Id);
+            entity?.ReleaseSeats();
+
+            var secondBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
+            Assert.NotNull(secondBooking);
+            Assert.Equal(newEvent.Id, secondBooking.EventId);
         }
     }
 }
