@@ -1,4 +1,5 @@
-﻿using EventManager.Interfaces;
+﻿using EventManager.Exceptions;
+using EventManager.Interfaces;
 using EventManager.Models;
 using Microsoft.Extensions.Hosting;
 
@@ -26,8 +27,7 @@ namespace EventManager.BackgroundServices
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                //await ProcessPendingBookingAsync(stoppingToken);
-                var pendingBookings = _bookingService.GetPendingBookingAsync().Result.ToList();
+                var pendingBookings = await _bookingService.GetPendingBookingAsync();
                 var tasks = pendingBookings.Select(booking => ProcessBookingAsync(booking, stoppingToken));
                 await Task.WhenAll(tasks);
                 await Task.Delay(1000, stoppingToken);
@@ -44,16 +44,6 @@ namespace EventManager.BackgroundServices
                 try
                 {
                     var currentEvent = _eventService.GetEvent(booking.EventId);
-
-                    if (currentEvent == null)
-                    {
-                        booking.Reject();
-
-                        await _bookingService.UpdateBookingAsync(booking);
-                        _logger.LogWarning("Booking {BookingId} rejected", booking.Id);
-                        return;
-                    }
-
                     booking.Confirm();
 
                     await _bookingService.UpdateBookingAsync(booking);
@@ -68,9 +58,17 @@ namespace EventManager.BackgroundServices
             {
                 throw;
             }
+            catch (NotFoundException)
+            {
+                booking.Reject();
+
+                await _bookingService.UpdateBookingAsync(booking);
+                _logger.LogWarning("Booking {BookingId} rejected", booking.Id);
+
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing booking {BookingId}",booking.Id);
+                _logger.LogError(ex, "Error while processing booking {BookingId}", booking.Id);
                 await _processingSemaphore.WaitAsync(stoppingToken);
 
                 try
@@ -92,24 +90,5 @@ namespace EventManager.BackgroundServices
                 }
             }
         }
-
-        /*
-         public async Task ProcessPendingBookingAsync(CancellationToken stoppingToken)
-        {
-            var pendingBooking = await _bookingService.GetPendingBookingAsync();
-
-            foreach (var booking in pendingBooking)
-            {
-                _logger.LogInformation("Processing booking {BookingId}.", booking.Id);
-
-                await Task.Delay(2000, stoppingToken);
-                booking.Status = BookingStatus.Confirmed;
-                booking.ProcessedAt = DateTime.Now;
-                await _bookingService.UpdateBookingAsync(booking);
-
-                _logger.LogInformation("Booking {BookingId} confirmed.", booking.Id);
-            }
-        }
-        */
     }
 }

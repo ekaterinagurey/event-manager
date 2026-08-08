@@ -18,6 +18,7 @@ namespace EventManager.DTOs.Events
         public DateTime EndAt { get; set; }
 
         [Required(ErrorMessage = "Общее количество мест на событии обязательно для заполнения.")]
+        [Range(1, int.MaxValue)]
         public int TotalSeats { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
