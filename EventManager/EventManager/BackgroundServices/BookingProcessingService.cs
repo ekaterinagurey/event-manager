@@ -1,17 +1,23 @@
-﻿using EventManager.Interfaces;
+﻿using EventManager.Exceptions;
+using EventManager.Interfaces;
 using EventManager.Models;
 using Microsoft.Extensions.Hosting;
 
 namespace EventManager.BackgroundServices
 {
-    public class BookingProcessingService: BackgroundService
+    public class BookingProcessingService : BackgroundService
     {
         private readonly IBookingService _bookingService;
+        private readonly IEventService _eventService;
         private readonly ILogger<BookingProcessingService> _logger;
+        private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
 
-        public BookingProcessingService(IBookingService bookingService, ILogger<BookingProcessingService> logger)
+        public BookingProcessingService(IBookingService bookingService,
+                                        IEventService eventService,
+                                        ILogger<BookingProcessingService> logger)
         {
             _bookingService = bookingService;
+            _eventService = eventService;
             _logger = logger;
         }
 
@@ -21,25 +27,67 @@ namespace EventManager.BackgroundServices
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessPendingBookingAsync(stoppingToken);
+                var pendingBookings = await _bookingService.GetPendingBookingAsync();
+                var tasks = pendingBookings.Select(booking => ProcessBookingAsync(booking, stoppingToken));
+                await Task.WhenAll(tasks);
                 await Task.Delay(1000, stoppingToken);
             }
         }
 
-        public async Task ProcessPendingBookingAsync(CancellationToken stoppingToken)
+        public async Task ProcessBookingAsync(Booking booking, CancellationToken stoppingToken)
         {
-            var pendingBooking = await _bookingService.GetPendingBookingAsync();
-
-            foreach (var booking in pendingBooking)
+            try
             {
-                _logger.LogInformation("Processing booking {BookingId}.", booking.Id);
-
                 await Task.Delay(2000, stoppingToken);
-                booking.Status = BookingStatus.Confirmed;
-                booking.ProcessedAt = DateTime.Now;
-                await _bookingService.UpdateBookingAsync(booking);
+                await _processingSemaphore.WaitAsync(stoppingToken);
 
-                _logger.LogInformation("Booking {BookingId} confirmed.", booking.Id);
+                try
+                {
+                    var currentEvent = _eventService.GetEvent(booking.EventId);
+                    booking.Confirm();
+
+                    await _bookingService.UpdateBookingAsync(booking);
+                    _logger.LogInformation("Booking {BookingId} confirmed.", booking.Id);
+                }
+                finally
+                {
+                    _processingSemaphore.Release();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (NotFoundException)
+            {
+                booking.Reject();
+
+                await _bookingService.UpdateBookingAsync(booking);
+                _logger.LogWarning("Booking {BookingId} rejected", booking.Id);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing booking {BookingId}", booking.Id);
+                await _processingSemaphore.WaitAsync(stoppingToken);
+
+                try
+                {
+                    booking.Reject();
+                    var currentEvent = _eventService.GetEvent(booking.EventId);
+
+                    if (currentEvent != null)
+                    {
+                        currentEvent.ReleaseSeats();
+                        _eventService.ChangeEvent(currentEvent.Id, currentEvent);
+                    }
+
+                    await _bookingService.UpdateBookingAsync(booking);
+                }
+                finally
+                {
+                    _processingSemaphore.Release();
+                }
             }
         }
     }

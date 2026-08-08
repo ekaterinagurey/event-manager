@@ -2,7 +2,7 @@
 
 namespace EventManager.DTOs.Events
 {
-    public class EventDTO : IValidatableObject
+    public class CreateEventDTO : IValidatableObject
     {
        // [Required(ErrorMessage = "Идентификатор события обязателен для заполнения.")]
        //public Guid Id { get; set; }
@@ -17,6 +17,9 @@ namespace EventManager.DTOs.Events
         [Required(ErrorMessage = "Поле 'EndAt' обязательно для заполнения.")]
         public DateTime EndAt { get; set; }
 
+        [Required(ErrorMessage = "Общее количество мест на событии обязательно для заполнения.")]
+        [Range(1, int.MaxValue)]
+        public int TotalSeats { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndAt <= StartAt)

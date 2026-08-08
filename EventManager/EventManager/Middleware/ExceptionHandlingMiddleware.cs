@@ -61,6 +61,7 @@ namespace EventManager.Middleware
                 ValidationException ve => StatusCodes.Status400BadRequest,
                 NotFoundException nfe => StatusCodes.Status404NotFound,
                 ArgumentException are => StatusCodes.Status400BadRequest,
+                NoAvailableSeatsException nase => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

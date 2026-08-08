@@ -8,27 +8,36 @@ namespace EventManager.Services
     {
         private readonly List<Booking> _bookings = [];
         private readonly IEventService _eventService;
+        private readonly object _bookingLock = new();
 
         public BookingService(IEventService eventService)
         {
             _eventService = eventService;
         }
 
-        public async Task<Booking> CreateBookingAsync(Guid eventId)
+        public Task<Booking> CreateBookingAsync(Guid eventId)
         {
-            var existEvent = _eventService.GetEvent(eventId);
-
-            var newBooking = new Booking
+            lock (_bookingLock)
             {
-                Id = Guid.NewGuid(),
-                EventId = eventId,
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now
-            };
+                var existEvent = _eventService.GetEvent(eventId);
 
-            _bookings.Add(newBooking);
+                if (!existEvent.TryReserveSeats())
+                {
+                    throw new NoAvailableSeatsException("No available seats for this event");
+                }
 
-            return await Task.FromResult(newBooking); ;
+                var newBooking = new Booking
+                {
+                    Id = Guid.NewGuid(),
+                    EventId = eventId,
+                    Status = BookingStatus.Pending,
+                    CreatedAt = DateTime.Now
+                };
+
+                _bookings.Add(newBooking);
+
+                return Task.FromResult(newBooking);
+            }
         }
 
         public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
