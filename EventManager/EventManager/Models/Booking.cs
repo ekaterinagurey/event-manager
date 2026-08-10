@@ -10,6 +10,19 @@ namespace EventManager.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; }
 
+        public Event Event { get; private set; } = null!;
+
+        private Booking()
+        { 
+        }
+        public Booking(Guid eventId)
+        {
+            Id = Guid.NewGuid();
+            EventId = eventId;
+            Status = BookingStatus.Pending;
+            CreatedAt = DateTime.Now;
+        }
+
         public void Confirm()
         {
             Status = BookingStatus.Confirmed;

@@ -150,24 +150,17 @@ namespace EventManager.Tests
         public async Task ProcessPendingBookingAsync_ShouldConfirmPendingBooking()
         {
             //Arrange
-            var booking = new Booking
-            {
-                Id = Guid.NewGuid(),
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now
-            };
-
+            var booking = new Booking(Guid.NewGuid());
             var bookingService = new Mock<IBookingService>();
             bookingService.Setup(x => x.GetPendingBookingAsync()).ReturnsAsync(new[] { booking });
             bookingService.Setup(x => x.UpdateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
 
             var eventService = new Mock<IEventService>();
-            eventService.Setup(x => x.GetEvent(booking.EventId)).Returns(new Event { Id = booking.Id,
-                                                                                     Title = "Test",
-                                                                                     StartAt = DateTime.Now,
-                                                                                     EndAt = DateTime.Now.AddHours(1),
-                                                                                     TotalSeats = 10,
-                                                                                     AvailableSeats = 9});
+            eventService.Setup(x => x.GetEvent(booking.EventId)).Returns(new Event("Test", 
+                                                                                   "Test", 
+                                                                                   DateTime.Now,
+                                                                                   DateTime.Now.AddHours(1),
+                                                                                   10));
             var logger = new Mock<ILogger<BookingProcessingService>>();
 
             var service = new BookingProcessingService(bookingService.Object, eventService.Object, logger.Object);
@@ -242,10 +235,7 @@ namespace EventManager.Tests
         public async Task Confirm_ShouldChangeStatus()
         {
             //Arrange
-            var booking = new Booking { Id = Guid.NewGuid(),
-                                        EventId = Guid.NewGuid(),
-                                        Status = BookingStatus.Pending,
-                                        CreatedAt = DateTime.Now};
+            var booking = new Booking(Guid.NewGuid());
 
             //Act
             booking.Confirm();
@@ -260,13 +250,7 @@ namespace EventManager.Tests
         public void Reject_ShouldChangeStatus()
         {
             //Arrange
-            var booking = new Booking
-            {
-                Id = Guid.NewGuid(),
-                EventId = Guid.NewGuid(),
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.Now
-            };
+            var booking = new Booking(Guid.NewGuid());
 
             //Act
             booking.Reject();

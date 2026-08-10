@@ -7,14 +7,12 @@ namespace EventManager.Mappers
     {
         public static Event ToEntity(this CreateEventDTO eventDTO)
         {
-            return new Event
-            {
-                Title = eventDTO.Title,
-                Description = eventDTO.Description,
-                StartAt = eventDTO.StartAt,
-                EndAt = eventDTO.EndAt,
-                TotalSeats = eventDTO.TotalSeats
-            };
+            return new Event(eventDTO.Title, 
+                             eventDTO.Description,
+                             eventDTO.StartAt,
+                             eventDTO.EndAt, 
+                             eventDTO.TotalSeats);
+
         }
 
         public static EventInfoDTO ToResponse(this Event currentEvent)
@@ -32,16 +30,11 @@ namespace EventManager.Mappers
         }
         public static Event ToEntity(this EventInfoDTO eventDTO)
         {
-            return new Event
-            {
-                Id = eventDTO.Id,
-                Title = eventDTO.Title,
-                Description = eventDTO.Description,
-                StartAt = eventDTO.StartAt,
-                EndAt = eventDTO.EndAt,
-                TotalSeats = eventDTO.TotalSeats,
-                AvailableSeats = eventDTO.AvailableSeats
-            };
+            return new Event(eventDTO.Title,
+                             eventDTO.Description,
+                             eventDTO.StartAt,
+                             eventDTO.EndAt,
+                             (int)eventDTO.TotalSeats);
         }
     }
 }

@@ -11,6 +11,24 @@ namespace EventManager.Models
         public DateTime EndAt { get; set; }
         public int? TotalSeats { get; set; }
         public int? AvailableSeats { get; set; }
+        public List<Booking> Bookings { get; private set; } = new List<Booking>();
+
+        public Event(string title,
+                      string description,
+                      DateTime startAt,
+                      DateTime endAt,
+                      int totalSeats)
+        {
+            Title = title;
+            Description = description;
+            StartAt = startAt;
+            EndAt = endAt;
+            TotalSeats = totalSeats;
+        }
+
+        private Event()
+        {
+        }
 
         public bool TryReserveSeats(int count = 1)
         {
