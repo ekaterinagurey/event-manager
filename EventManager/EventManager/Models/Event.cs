@@ -13,17 +13,35 @@ namespace EventManager.Models
         public int? AvailableSeats { get; set; }
         public List<Booking> Bookings { get; private set; } = new List<Booking>();
 
-        public Event(string title,
+        private Event(Guid id, 
+                      string title,
                       string description,
                       DateTime startAt,
                       DateTime endAt,
                       int totalSeats)
         {
+            Id = id;
             Title = title;
             Description = description;
             StartAt = startAt;
             EndAt = endAt;
             TotalSeats = totalSeats;
+            AvailableSeats = totalSeats;
+        }
+
+        public static Event Create(string title,
+                                   string description,
+                                   DateTime startAt,
+                                   DateTime endAt,
+                                   int totalSeats)
+        {
+            if (totalSeats <= 0)
+                throw new ValidationException("Общее количество мест должно быть больше 0.");
+
+            if (endAt <= startAt)
+                throw new ArgumentException("EndAt должна быть позже StartAt.");
+
+            return new Event(Guid.NewGuid(), title.Trim(), description, startAt, endAt, totalSeats);
         }
 
         private Event()
@@ -51,30 +69,6 @@ namespace EventManager.Models
 
             if (AvailableSeats > TotalSeats)
                 AvailableSeats = TotalSeats;
-        }
-
-        public static Event Create(string title,
-                                   string description,
-                                   DateTime startAt,
-                                   DateTime endAt,
-                                   int totalSeats)
-        {
-            if (totalSeats <= 0)
-                throw new ValidationException("Общее количество мест должно быть больше 0.");
-
-            if (endAt <= startAt)
-                throw new ArgumentException("EndAt должна быть позже StartAt.");
-
-            return new Event
-            {
-                Id = Guid.NewGuid(),
-                Title = title,
-                Description = description,
-                StartAt = startAt,
-                EndAt = endAt,
-                TotalSeats = totalSeats,
-                AvailableSeats = totalSeats
-            };
         }
     }
 }

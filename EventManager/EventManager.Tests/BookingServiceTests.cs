@@ -150,17 +150,17 @@ namespace EventManager.Tests
         public async Task ProcessPendingBookingAsync_ShouldConfirmPendingBooking()
         {
             //Arrange
-            var booking = new Booking(Guid.NewGuid());
+            var booking = Booking.Create(Guid.NewGuid());
             var bookingService = new Mock<IBookingService>();
             bookingService.Setup(x => x.GetPendingBookingAsync()).ReturnsAsync(new[] { booking });
             bookingService.Setup(x => x.UpdateBookingAsync(It.IsAny<Booking>())).Returns(Task.CompletedTask);
 
             var eventService = new Mock<IEventService>();
-            eventService.Setup(x => x.GetEvent(booking.EventId)).Returns(new Event("Test", 
-                                                                                   "Test", 
-                                                                                   DateTime.Now,
-                                                                                   DateTime.Now.AddHours(1),
-                                                                                   10));
+            eventService.Setup(x => x.GetEvent(booking.EventId)).Returns(Event.Create("Test",
+                                                                                      "Test",
+                                                                                       DateTime.Now,
+                                                                                       DateTime.Now.AddHours(1),
+                                                                                       10));
             var logger = new Mock<ILogger<BookingProcessingService>>();
 
             var service = new BookingProcessingService(bookingService.Object, eventService.Object, logger.Object);
@@ -235,7 +235,7 @@ namespace EventManager.Tests
         public async Task Confirm_ShouldChangeStatus()
         {
             //Arrange
-            var booking = new Booking(Guid.NewGuid());
+            var booking = Booking.Create(Guid.NewGuid());
 
             //Act
             booking.Confirm();
@@ -250,7 +250,7 @@ namespace EventManager.Tests
         public void Reject_ShouldChangeStatus()
         {
             //Arrange
-            var booking = new Booking(Guid.NewGuid());
+            var booking = Booking.Create(Guid.NewGuid());
 
             //Act
             booking.Reject();
@@ -303,7 +303,7 @@ namespace EventManager.Tests
 
             //Act
             var tasks = Enumerable.Range(0, 20)
-                .Select(async _=>
+                .Select(async _ =>
                 {
                     try
                     {

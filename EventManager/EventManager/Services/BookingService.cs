@@ -26,13 +26,7 @@ namespace EventManager.Services
                     throw new NoAvailableSeatsException("No available seats for this event");
                 }
 
-                var newBooking = new Booking(eventId);
-                /*{
-                    Id = Guid.NewGuid(),
-                    EventId = eventId//,
-                    Status = BookingStatus.Pending,
-                    CreatedAt = DateTime.Now
-                };*/
+                var newBooking = Booking.Create(eventId);
 
                 _bookings.Add(newBooking);
 

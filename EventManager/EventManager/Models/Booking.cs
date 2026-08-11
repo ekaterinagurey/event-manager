@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace EventManager.Models
 {
@@ -15,13 +16,29 @@ namespace EventManager.Models
         private Booking()
         { 
         }
-        public Booking(Guid eventId)
+
+        private Booking(Guid id,
+                        Guid eventId, 
+                        BookingStatus status,
+                        DateTime createdAt)
         {
-            Id = Guid.NewGuid();
+            Id = id;
             EventId = eventId;
-            Status = BookingStatus.Pending;
-            CreatedAt = DateTime.Now;
+            Status = status;
+            CreatedAt = createdAt;
         }
+
+        public static Booking Create(Guid eventId)
+        {
+            if (eventId == Guid.Empty)
+                throw new ValidationException("EventId не может быть пустым.");
+
+            return new Booking(Guid.NewGuid(), 
+                               eventId, 
+                               BookingStatus.Pending, 
+                               DateTime.UtcNow);
+        }
+
 
         public void Confirm()
         {
