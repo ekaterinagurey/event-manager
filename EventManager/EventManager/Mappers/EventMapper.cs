@@ -8,10 +8,10 @@ namespace EventManager.Mappers
         public static Event ToEntity(this CreateEventDTO eventDTO)
         {
             return Event.Create(eventDTO.Title, 
-                                eventDTO.Description,
                                 eventDTO.StartAt,
                                 eventDTO.EndAt, 
-                                eventDTO.TotalSeats);
+                                eventDTO.TotalSeats,
+                                eventDTO.Description);
 
         }
 
@@ -31,10 +31,10 @@ namespace EventManager.Mappers
         public static Event ToEntity(this EventInfoDTO eventDTO)
         {
             return Event.Create(eventDTO.Title,
-                                eventDTO.Description,
                                 eventDTO.StartAt,
                                 eventDTO.EndAt,
-                                (int)eventDTO.TotalSeats);
+                                (int)eventDTO.TotalSeats,
+                                eventDTO.Description);
         }
     }
 }

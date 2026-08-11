@@ -4,12 +4,11 @@ namespace EventManager.Interfaces
 {
     public interface IEventService
     {
-        IEnumerable<Event> GetEvents();
-        PaginateResultDTO<Event> GetEvents(GetEventsRequestDTO filter);
-        Event? GetEvent(Guid id);
-        Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent);
-        bool ChangeEvent(Guid id, Event editingEvent);
-        bool RemoveEvent(Guid id);
+        Task<PaginateResultDTO<Event>> GetEventsAsync(GetEventsRequestDTO filter, CancellationToken cancellationToken = default);
+        Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent, CancellationToken cancellationToken = default);
+        Task<EventInfoDTO> UpdateEventAsync(Guid id, Event editingEvent, CancellationToken cancellationToken = default);
+        Task<bool> RemoveEventAsync(Guid id, CancellationToken cancellationToken = default);
 
     }
 }

@@ -1,18 +1,23 @@
 using EventManager.BackgroundServices;
+using EventManager.DataAccess;
 using EventManager.Interfaces;
 using EventManager.Middleware;
 using EventManager.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IEventService, EventService>();
-builder.Services.AddSingleton<IBookingService, BookingService>();
-builder.Services.AddHostedService<BookingProcessingService>();
 builder.Services.AddOpenApi();
-
-
 builder.Services.AddControllers();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+
+builder.Services.AddHostedService<BookingProcessingService>();
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -34,6 +39,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 if (app.Environment.IsDevelopment())
 {
