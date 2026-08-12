@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace EventManager.Services
 {
-    internal sealed class EventService : IEventService
+    public class EventService : IEventService
     {
         private readonly AppDbContext _context;
         public EventService(AppDbContext context)
@@ -78,12 +78,12 @@ namespace EventManager.Services
             return createdEvent.ToResponse();
         }
 
-        public async Task<EventInfoDTO> UpdateEventAsync(Guid id, Event editingEvent, CancellationToken cancellationToken = default)
+        public async Task<EventInfoDTO> UpdateEventAsync(Guid id, UpdateEventDTO editingEvent, CancellationToken cancellationToken = default)
         {
             var exitingEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
             ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
-            exitingEvent.Update(editingEvent.Title, editingEvent.StartAt, editingEvent.EndAt, editingEvent.TotalSeats, editingEvent.Description);
+            exitingEvent.Update(editingEvent.Title, editingEvent.StartAt, editingEvent.EndAt, editingEvent.Description);
             await _context.SaveChangesAsync(cancellationToken);
             return exitingEvent.ToResponse();
         }

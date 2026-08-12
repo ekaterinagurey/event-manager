@@ -44,9 +44,9 @@ namespace EventManager.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult<EventInfoDTO>> UpdateEvent(Guid id, [FromBody] CreateEventDTO newEvent)
+        public async Task<ActionResult<EventInfoDTO>> UpdateEvent(Guid id, [FromBody] UpdateEventDTO editingEvent)
         {
-            var result = await _eventService.UpdateEventAsync(id, newEvent.ToEntity());
+            var result = await _eventService.UpdateEventAsync(id, editingEvent);
             return Ok(result);
         }
 

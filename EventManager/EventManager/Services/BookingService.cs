@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace EventManager.Services
 {
-    internal sealed class BookingService : IBookingService
+    public sealed class BookingService : IBookingService
     {
         private static readonly SemaphoreSlim BookingLock = new(1, 1);
         private readonly AppDbContext _context;
@@ -49,21 +49,11 @@ namespace EventManager.Services
             return booking;
         }
 
-       /* public async Task UpdateBookingAsync(Booking booking, CancellationToken cancellationToken)
-        {
-            var existingBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == booking.Id, cancellationToken)
-                                  ?? throw new NotFoundException($"Бронирование с id '{booking.Id}' не найдено.");
-
-            existingBooking.Status = booking.Status;
-            existingBooking.ProcessedAt = booking.ProcessedAt;
-            return Task.CompletedTask;
-        }*/
-
-        /*public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Bookings
                 .Where(b => b.Status == BookingStatus.Pending)
                 .ToListAsync(cancellationToken);
-        }*/
+        }
     }
 }

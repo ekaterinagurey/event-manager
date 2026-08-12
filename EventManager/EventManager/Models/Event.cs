@@ -52,7 +52,6 @@ namespace EventManager.Models
         public void Update(string? title,
                            DateTime? startAt,
                            DateTime? endAt,
-                           int? totalSeats,
                            string? description = null)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -66,9 +65,6 @@ namespace EventManager.Models
 
             if (endAt <= startAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
-
-            if (!totalSeats.HasValue || totalSeats.Value <= 0)
-                throw new ArgumentException("Количество резервируемых мест должно быть больше 0.");
 
             Title = title!;
             StartAt = startAt!.Value;
