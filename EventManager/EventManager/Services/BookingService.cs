@@ -1,69 +1,59 @@
-﻿using EventManager.Exceptions;
+﻿using EventManager.DataAccess;
+using EventManager.Exceptions;
 using EventManager.Interfaces;
 using EventManager.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace EventManager.Services
 {
-    public class BookingService: IBookingService
+    public sealed class BookingService : IBookingService
     {
-        private readonly List<Booking> _bookings = [];
-        private readonly IEventService _eventService;
-        private readonly object _bookingLock = new();
+        private static readonly SemaphoreSlim BookingLock = new(1, 1);
+        private readonly AppDbContext _context;
 
-        public BookingService(IEventService eventService)
+        public BookingService(AppDbContext context)
         {
-            _eventService = eventService;
+            _context = context;
         }
 
-        public Task<Booking> CreateBookingAsync(Guid eventId)
+        public async Task<Booking> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
         {
-            lock (_bookingLock)
+            await BookingLock.WaitAsync(cancellationToken);
+            try
             {
-                var existEvent = _eventService.GetEvent(eventId);
+                var existEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken)
+                                 ?? throw new NotFoundException("Event not found");
 
                 if (!existEvent.TryReserveSeats())
                 {
                     throw new NoAvailableSeatsException("No available seats for this event");
                 }
 
-                var newBooking = new Booking
-                {
-                    Id = Guid.NewGuid(),
-                    EventId = eventId,
-                    Status = BookingStatus.Pending,
-                    CreatedAt = DateTime.Now
-                };
-
-                _bookings.Add(newBooking);
-
-                return Task.FromResult(newBooking);
+                var booking = Booking.Create(eventId);
+                await _context.Bookings.AddAsync(booking, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                return booking;
+            }
+            finally
+            {
+                BookingLock.Release();
             }
         }
 
-        public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
+        public async Task<Booking> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default)
         {
-            var booking = _bookings.FirstOrDefault(x => x.Id == bookingId);
+            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken)
+                ?? throw new NotFoundException($"Бронирование с id '{bookingId}' не найдено.");
 
-            if(booking is null)
-                throw new NotFoundException($"Бронирование с id '{bookingId}' не найдено.");
-
-            return await Task.FromResult(booking); 
+            return booking;
         }
 
-        public Task UpdateBookingAsync(Booking booking)
+        public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
         {
-            var existingBooking = _bookings.FirstOrDefault(x => x.Id == booking.Id)
-                ?? throw new NotFoundException($"Бронирование с id '{booking.Id}' не найдено.");
-
-            existingBooking.Status = booking.Status;
-            existingBooking.ProcessedAt = booking.ProcessedAt;
-            return Task.CompletedTask;
-        }
-
-        public Task<IEnumerable<Booking>> GetPendingBookingAsync()
-        {
-            var pendingBookings = _bookings.Where(x => x.Status == BookingStatus.Pending);
-            return Task.FromResult(pendingBookings);
+            return await _context.Bookings
+                .Where(b => b.Status == BookingStatus.Pending)
+                .ToListAsync(cancellationToken);
         }
     }
 }

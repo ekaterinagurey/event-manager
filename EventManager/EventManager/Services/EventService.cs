@@ -1,23 +1,25 @@
-﻿using EventManager.DTOs.Events;
+﻿using EventManager.DataAccess;
+using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Interfaces;
 using EventManager.Mappers;
 using EventManager.Models;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace EventManager.Services
 {
     public class EventService : IEventService
     {
-        private readonly List<Event> _events = [];
-
-        public IEnumerable<Event> GetEvents()
+        private readonly AppDbContext _context;
+        public EventService(AppDbContext context)
         {
-            return _events;
+            _context = context;
         }
-        public PaginateResultDTO<Event> GetEvents(GetEventsRequestDTO filter)
+
+        public async Task<PaginateResultDTO<Event>> GetEventsAsync(GetEventsRequestDTO filter, CancellationToken cancellationToken = default)
         {
-            var query = _events.AsEnumerable();
+            var query = _context.Events.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.Title))
             {
@@ -36,10 +38,10 @@ namespace EventManager.Services
 
             var totalItems = query.Count();
 
-            var items = query
+            var items = await query
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             return new PaginateResultDTO<Event>
             {
@@ -50,16 +52,14 @@ namespace EventManager.Services
             };
         }
 
-        public Event? GetEvent(Guid id)
+        public async Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var eventEntity = _events.FirstOrDefault(x => x.Id == id);
-
-            if (eventEntity == null)
-                throw new NotFoundException($"Событие с id = {id} не найдено.");
+            var eventEntity = await _context.Events.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+           ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
             return eventEntity;
         }
 
-        public Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent)
+        public async Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(newEvent.Title))
                 throw new ArgumentException("Заголовок события обязателен для заполнения.");
@@ -68,44 +68,35 @@ namespace EventManager.Services
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
             var createdEvent = Event.Create(newEvent.Title,
-                                            newEvent.Description,
                                             newEvent.StartAt,
                                             newEvent.EndAt,
-                                            newEvent.TotalSeats);
+                                            newEvent.TotalSeats,
+                                            newEvent.Description);
 
-            _events.Add(createdEvent);
-            return Task.FromResult(createdEvent.ToResponse());
+            await _context.Events.AddAsync(createdEvent, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            return createdEvent.ToResponse();
         }
 
-        public bool ChangeEvent(Guid id, Event editingEvent)
+        public async Task<EventInfoDTO> UpdateEventAsync(Guid id, UpdateEventDTO editingEvent, CancellationToken cancellationToken = default)
         {
-            var exitingEvent = GetEvent(id);
-            
-            if (exitingEvent == null)
-                throw new NotFoundException($"Событие с id = {id} не найдено.");
+            var exitingEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
-            if (string.IsNullOrWhiteSpace(editingEvent.Title))
-                throw new ArgumentException("Заголовок события обязателен для заполнения.");
-
-            if (editingEvent.EndAt <= editingEvent.StartAt)
-                throw new ArgumentException("EndAt должна быть позже StartAt.");
-
-            editingEvent.Id = id;
-            editingEvent.AvailableSeats = exitingEvent.AvailableSeats;
-
-            var index = _events.IndexOf(exitingEvent);
-            _events[index] = editingEvent;
-            return true;
+            exitingEvent.Update(editingEvent.Title, editingEvent.StartAt, editingEvent.EndAt, editingEvent.Description);
+            await _context.SaveChangesAsync(cancellationToken);
+            return exitingEvent.ToResponse();
         }
 
-        public bool RemoveEvent(Guid id)
+        public async Task<bool> RemoveEventAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var exitingEvent = GetEvent(id);
+            var exitingEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
             if (exitingEvent == null)
                 throw new NotFoundException($"Событие с id = {id} не найдено.");
 
-            _events.Remove(exitingEvent);
+            _context.Events.Remove(exitingEvent);
+            await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
     }

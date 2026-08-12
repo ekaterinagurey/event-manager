@@ -4,8 +4,6 @@ namespace EventManager.DTOs.Events
 {
     public class CreateEventDTO : IValidatableObject
     {
-       // [Required(ErrorMessage = "Идентификатор события обязателен для заполнения.")]
-       //public Guid Id { get; set; }
 
         [Required(ErrorMessage = "Заголовок события обязателен для заполнения.")]
         public string Title { get; set; }

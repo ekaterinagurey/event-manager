@@ -23,40 +23,37 @@ namespace EventManager.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PaginateResultDTO<Event>> GetAll([FromQuery] GetEventsRequestDTO filter)
+        public async Task<ActionResult<PaginateResultDTO<Event>>> GetAll([FromQuery] GetEventsRequestDTO filter)
         {
-            return Ok(_eventService.GetEvents(filter));
+            return Ok(await _eventService.GetEventsAsync(filter));
         }
 
         [HttpGet("{id:Guid}")]
-        public ActionResult<Event> GetById(Guid id)
+        public async Task<ActionResult<Event>> GetById(Guid id)
         {
-            var result = _eventService.GetEvent(id);
-            return Ok(result);
+            return Ok(await _eventService.GetEventByIdAsync(id));
         }
 
-
         [HttpPost]
-        public async Task<ActionResult<EventInfoDTO>> CreateAsync([FromBody] CreateEventDTO newEvent)
+        public async Task<ActionResult<EventInfoDTO>> Create([FromBody] CreateEventDTO newEvent)
         {
             var result = await _eventService.CreateEventAsync(newEvent);
             return CreatedAtAction(nameof(GetById),
                                    new { id = result.Id },
                                    result);
-           // return new CreatedResult($"/Events/{result.Id}", _eventService.GetEvent(result.Id));
         }
 
         [HttpPut("{id:guid}")]
-        public IActionResult Put(Guid id, [FromBody] CreateEventDTO newEvent)
+        public async Task<ActionResult<EventInfoDTO>> UpdateEvent(Guid id, [FromBody] UpdateEventDTO editingEvent)
         {
-            var result = _eventService.ChangeEvent(id, newEvent.ToEntity());
-            return Ok(_eventService.GetEvent(id));
+            var result = await _eventService.UpdateEventAsync(id, editingEvent);
+            return Ok(result);
         }
 
         [HttpDelete("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<ActionResult> Delete(Guid id)
         {
-            var result = _eventService.RemoveEvent(id);
+            var result = await _eventService.RemoveEventAsync(id);
             return NoContent();
         }
 

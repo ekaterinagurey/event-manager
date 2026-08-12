@@ -13,6 +13,51 @@ Services/		- бизнес логика
 
 # Запуск проекта
 
+## Настройка базы данных
+
+Для запуска приложения требуется **PostgreSQL**.
+
+### Настройка строки подключения
+
+Перед запуском приложения необходимо указать строку подключения к PostgreSQL в конфигурации приложения.
+
+В `appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5450;Database=eventapi;Username=postgres;Password=your_password"
+  }
+}
+```
+
+### Создание схемы базы данных
+
+При запуске приложения схема базы данных создаётся автоматически с помощью EF Core:
+
+```csharp
+context.Database.EnsureCreated();
+```
+
+Поэтому для первоначального запуска не требуется вручную создавать таблицы базы данных.
+
+ PostgreSQL должен быть запущен и доступен по указанным в строке подключения параметрам.
+
+### База данных в тестах
+
+Для юнит-тестов используется **Entity Framework Core InMemory Database**. Тесты не требуют подключения к PostgreSQL.
+
+Для каждого теста используется отдельное имя InMemory-базы:
+
+```csharp
+var dbName = Guid.NewGuid().ToString();
+
+services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase(dbName));
+```
+
+Это позволяет изолировать данные разных тестов и выполнять тесты независимо от состояния реальной базы данных
+
 ## Собрать проект
 dotnet build EventManager\EventManager\EventManager.csproj -c Debug 
 
