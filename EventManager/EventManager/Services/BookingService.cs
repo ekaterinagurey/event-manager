@@ -1,7 +1,8 @@
 ﻿using EventManager.DataAccess;
 using EventManager.Exceptions;
-using EventManager.Interfaces;
 using EventManager.Models;
+using EventManager.Repositories.Interfaces;
+using EventManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
 
@@ -10,11 +11,14 @@ namespace EventManager.Services
     public sealed class BookingService : IBookingService
     {
         private static readonly SemaphoreSlim BookingLock = new(1, 1);
-        private readonly AppDbContext _context;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IEventRepository _eventRepository;
 
-        public BookingService(AppDbContext context)
+        public BookingService(IBookingRepository bookingRepository,
+                              IEventRepository eventRepository)
         {
-            _context = context;
+            _bookingRepository = bookingRepository;
+            _eventRepository = eventRepository;
         }
 
         public async Task<Booking> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
@@ -22,17 +26,16 @@ namespace EventManager.Services
             await BookingLock.WaitAsync(cancellationToken);
             try
             {
-                var existEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken)
+                var existingEvent = await _eventRepository.GetByIdAsync(eventId, cancellationToken)
                                  ?? throw new NotFoundException("Event not found");
 
-                if (!existEvent.TryReserveSeats())
+                if (!existingEvent.TryReserveSeats())
                 {
                     throw new NoAvailableSeatsException("No available seats for this event");
                 }
 
                 var booking = Booking.Create(eventId);
-                await _context.Bookings.AddAsync(booking, cancellationToken);
-                await _context.SaveChangesAsync(cancellationToken);
+                await _bookingRepository.CreateAsync(booking, cancellationToken);
                 return booking;
             }
             finally
@@ -43,17 +46,14 @@ namespace EventManager.Services
 
         public async Task<Booking> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default)
         {
-            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken)
+            var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken)
                 ?? throw new NotFoundException($"Бронирование с id '{bookingId}' не найдено.");
-
             return booking;
         }
 
         public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Bookings
-                .Where(b => b.Status == BookingStatus.Pending)
-                .ToListAsync(cancellationToken);
+            return await _bookingRepository.GetPendingAsync(cancellationToken); ;
         }
     }
 }

@@ -2,10 +2,10 @@
 using EventManager.DTOs;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
-using EventManager.Interfaces;
 using EventManager.Mappers;
 using EventManager.Models;
 using EventManager.Services;
+using EventManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

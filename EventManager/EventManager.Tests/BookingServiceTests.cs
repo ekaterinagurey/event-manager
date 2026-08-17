@@ -4,11 +4,11 @@ using EventManager.Exceptions;
 using EventManager.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using EventManager.Interfaces;
 using EventManager.Services;
 using EventManager.DataAccess;
 using Moq;
 using Microsoft.EntityFrameworkCore;
+using EventManager.Services.Interfaces;
 
 namespace EventManager.Tests
 {
