@@ -1,14 +1,16 @@
 ﻿using EventManager.BackgroundServices;
+using EventManager.DataAccess;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Models;
+using EventManager.Repositories;
+using EventManager.Repositories.Interfaces;
+using EventManager.Services;
+using EventManager.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using EventManager.Services;
-using EventManager.DataAccess;
 using Moq;
-using Microsoft.EntityFrameworkCore;
-using EventManager.Services.Interfaces;
 
 namespace EventManager.Tests
 {
@@ -25,6 +27,8 @@ namespace EventManager.Tests
             var services = new ServiceCollection();
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
+            services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
             services.AddScoped<IEventService, EventService>();
             services.AddScoped<IBookingService, BookingService>();
             services.AddLogging();

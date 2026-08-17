@@ -7,7 +7,7 @@ namespace EventManager.Repositories.Interfaces
     {
         Task<Event?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-        Task<IEnumerable<Event>> GetPagedAsync(string? title,
+        Task<(List<Event> Events, int TotalCount)> GetPagedAsync(string? title,
                                                 DateTime? from,
                                                 DateTime? to,
                                                 int page = 1,

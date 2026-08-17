@@ -30,10 +30,10 @@ namespace EventManager.Services
 
             return new PaginateResultDTO<Event>
             {
-                TotalCount = events.Count(),
+                TotalCount = events.TotalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize,
-                Items = events
+                Items = events.Events
             };
         }
 

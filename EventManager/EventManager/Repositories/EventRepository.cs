@@ -3,6 +3,7 @@ using EventManager.Exceptions;
 using EventManager.Models;
 using EventManager.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 
 namespace EventManager.Repositories
@@ -20,12 +21,12 @@ namespace EventManager.Repositories
             return await _context.Events.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
-        public async Task<IEnumerable<Event>> GetPagedAsync(string? title,
-                                                            DateTime? from,
-                                                            DateTime? to,
-                                                            int page = 1,
-                                                            int pageSize = 10,
-                                                            CancellationToken cancellationToken = default)
+        public async Task<(List<Event> Events, int TotalCount)> GetPagedAsync(string? title,
+                                                                              DateTime? from,
+                                                                              DateTime? to,
+                                                                              int page = 1,
+                                                                              int pageSize = 10,
+                                                                              CancellationToken cancellationToken = default)
         {
             IQueryable<Event> query = _context.Events;
 
@@ -45,13 +46,15 @@ namespace EventManager.Repositories
                 query = query.Where(x => x.EndAt <= to.Value);
             }
 
-            //var totalItems = query.Count();
+            var totalCount = await query.CountAsync();
 
-            return await query
+            var events = await query
                 .OrderBy(x => x.StartAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
+
+            return (events, totalCount);
         }
 
         public async Task CreateAsync(Event newEvent, CancellationToken cancellationToken)
