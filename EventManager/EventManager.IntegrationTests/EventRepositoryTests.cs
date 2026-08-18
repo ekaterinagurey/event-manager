@@ -58,14 +58,16 @@ namespace EventManager.IntegrationTests
 
             var events = Enumerable.Range(1, count)
                 .Select(i => Event.Create($"Test Event {i}",
-                                          DateTime.UtcNow,
-                                          DateTime.UtcNow.AddHours(1),
+                                          DateTime.UtcNow.AddDays(i),
+                                          DateTime.UtcNow.AddDays(i).AddHours(1),
                                           10))
                 .ToList();
 
             context.Events.AddRange(events);
             await context.SaveChangesAsync();
         }
+
+        #region CreateAsync Tests
 
         //Тест на создание события
         [Fact]
@@ -95,6 +97,9 @@ namespace EventManager.IntegrationTests
 
         }
 
+        #endregion
+
+        #region GetByIdAsync Tests
         //Тест на получение события
         [Fact]
         public async Task GetByIdAsync_ReturnsCorrectEvent()
@@ -121,6 +126,25 @@ namespace EventManager.IntegrationTests
             Assert.Equal("Test event", result.Title);
         }
 
+        //Тест на получение отсутствующего события
+        [Fact]
+        public async Task GetByIdAsync_ReturnNull_WhenEventDoesNotExist()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
+
+            // Act & Assert
+            var result = await repository.GetByIdAsync(Guid.NewGuid(), default);
+            Assert.Null(result);
+        }
+
+        #endregion
+
+        #region GetPagedAsync Tests
+        // Тест на получение списка событий с пагинацией. Без фильтров
         [Fact]
         public async Task GetPagedAsync_ReturnCorrectPage()
         {
@@ -138,6 +162,108 @@ namespace EventManager.IntegrationTests
             Assert.Equal(5, result.Events.Count);
         }
 
+        // Тест на получение списка событий с пагинацией. Фильтр по названию
+        [Fact]
+        public async Task GetPagedAsync_ReturnCorrectEvent_FilterTitle()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await AddTestEventsAsync(15);
+
+            // Act
+            var repository = new EventRepository(CreateContext());
+            var result = await repository.GetPagedAsync("Test event 1", null, null, 1, 5);
+
+            // Assert
+            Assert.Equal(7, result.TotalCount);
+            Assert.Equal(5, result.Events.Count);
+        }
+
+        // Тест на получение списка событий с пагинацией. Фильтр по дате 'From'
+        [Fact]
+        public async Task GetPagedAsync_ReturnCorrectEvent_FilterFrom()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await AddTestEventsAsync(15);
+
+            // Act
+            var repository = new EventRepository(CreateContext());
+            var result = await repository.GetPagedAsync(null, DateTime.UtcNow.AddDays(3), null, 1, 5);
+
+            // Assert
+            Assert.Equal(12, result.TotalCount);
+            Assert.Equal(5, result.Events.Count);
+        }
+
+        // Тест на получение списка событий с пагинацией. Фильтр по дате 'To'
+        [Fact]
+        public async Task GetPagedAsync_ReturnCorrectEvent_FilterTo()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await AddTestEventsAsync(15);
+
+            // Act
+            var repository = new EventRepository(CreateContext());
+            var result = await repository.GetPagedAsync(null, null, DateTime.UtcNow.AddDays(3), 1, 5);
+
+            // Assert
+            Assert.Equal(2, result.TotalCount);
+            Assert.Equal(2, result.Events.Count);
+        }
+
+        // Тест на получение списка событий с пагинацией. Фильтр интервалу дат 
+        [Fact]
+        public async Task GetPagedAsync_ReturnCorrectEvent_FilterFromTo()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await AddTestEventsAsync(15);
+
+            // Act
+            var repository = new EventRepository(CreateContext());
+            var result = await repository.GetPagedAsync(null,
+                                                        DateTime.UtcNow.AddDays(1),
+                                                        DateTime.UtcNow.AddDays(8),
+                                                        1,
+                                                        5);
+
+            // Assert
+            Assert.Equal(6, result.TotalCount);
+            Assert.Equal(5, result.Events.Count);
+        }
+
+        // Тест на получение списка событий с пагинацией. Комбинированный фильтр
+        [Fact]
+        public async Task GetPagedAsync_ReturnCorrectEvent_СombinationFilter()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await AddTestEventsAsync(15);
+
+            // Act
+            var repository = new EventRepository(CreateContext());
+            var result = await repository.GetPagedAsync("Test Event 1",
+                                                        DateTime.UtcNow.AddDays(7),
+                                                        DateTime.UtcNow.AddDays(13),
+                                                        1,
+                                                        5);
+
+            // Assert
+            Assert.Equal(3, result.TotalCount);
+            Assert.Equal(3, result.Events.Count);
+        }
+
+
+        #endregion
+
+        #region UpdateAsync Tests
         // Тест на обновление события
         [Fact]
         public async Task UpdateAsync_ChangesFieldInDatabase()
@@ -170,7 +296,9 @@ namespace EventManager.IntegrationTests
             var updated = await verifyContext.Events.FirstAsync(e => e.Id == newEvent.Id);
             Assert.Equal("Новое название", updated.Title);
         }
+        #endregion
 
+        #region DeleteAsync Tests
         //Тест на удаление события
         [Fact]
         public async Task DeleteAsync_RemovesFromDatabase()
@@ -199,6 +327,7 @@ namespace EventManager.IntegrationTests
             var deleted = await verifyContext.Events.FirstOrDefaultAsync(e => e.Id == newEvent.Id);
             Assert.Null(deleted);
         }
+        #endregion
 
     }
 }

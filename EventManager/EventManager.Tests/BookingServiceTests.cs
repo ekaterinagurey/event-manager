@@ -38,7 +38,6 @@ namespace EventManager.Tests
             _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
             _bookingService = _scope.ServiceProvider.GetRequiredService<IBookingService>();
         }
-
         public void Dispose()
         {
             _scope.Dispose();
