@@ -339,7 +339,7 @@ namespace EventManager.Tests
         #region Confirm & Reject Tests
         //Тест проверяет, что после вызова Confirm() бронь возвращает статус Confirmed и заполненный ProcessedAt
         [Fact]
-        public async Task Confirm_ShouldChangeStatus()
+        public void Confirm_ShouldChangeStatus()
         {
             //Arrange
             var booking = Booking.Create(Guid.NewGuid());

@@ -14,11 +14,11 @@ namespace EventManager.Models
         public Event Event { get; private set; } = null!;
 
         private Booking()
-        { 
+        {
         }
 
         private Booking(Guid id,
-                        Guid eventId, 
+                        Guid eventId,
                         BookingStatus status,
                         DateTime createdAt)
         {
@@ -33,9 +33,9 @@ namespace EventManager.Models
             if (eventId == Guid.Empty)
                 throw new ValidationException("EventId не может быть пустым.");
 
-            return new Booking(Guid.NewGuid(), 
-                               eventId, 
-                               BookingStatus.Pending, 
+            return new Booking(Guid.NewGuid(),
+                               eventId,
+                               BookingStatus.Pending,
                                DateTime.UtcNow);
         }
 

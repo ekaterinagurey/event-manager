@@ -1,44 +1,25 @@
-﻿using Docker.DotNet.Models;
-using EventManager.DataAccess;
+﻿using EventManager.DataAccess;
+using EventManager.IntegrationTests.Infrastructure;
 using EventManager.Models;
 using EventManager.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Testcontainers.PostgreSql;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace EventManager.IntegrationTests
 {
-    public class EventRepositoryTests : IAsyncLifetime
+    [Collection("Postgres")]
+    public class EventRepositoryTests
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-         .WithImage("postgres:16-alpine")
-         .WithDatabase("eventapi_test")
-         .WithUsername("postgres")
-         .WithPassword("postgres")
-         .Build();
+        private readonly PostgresFixture _fixture;
 
-        public async Task InitializeAsync()
+        public EventRepositoryTests(PostgresFixture fixture)
         {
-            await _postgres.StartAsync();
-        }
-
-        public async Task DisposeAsync()
-        {
-            await _postgres.DisposeAsync();
+            _fixture = fixture;
         }
 
         private AppDbContext CreateContext()
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql(_postgres.GetConnectionString(),
+                .UseNpgsql(_fixture.ConnectionString,
                             npgsqlOptions =>
                             {
                                 npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
@@ -334,6 +315,43 @@ namespace EventManager.IntegrationTests
             await using var verifyContext = CreateContext();
             var deleted = await verifyContext.Events.FirstOrDefaultAsync(e => e.Id == newEvent.Id);
             Assert.Null(deleted);
+        }
+
+        //Тест на удаление события
+        [Fact]
+        public async Task DeleteAsync_ShouldCascadeDelete()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await using var context = CreateContext();
+
+            var newEvent = Event.Create("Удаляемое",
+                                        DateTime.UtcNow,
+                                        DateTime.UtcNow.AddHours(1),
+                                        10);
+
+            context.Events.Add(newEvent);
+            await context.SaveChangesAsync();
+
+            var booking = Booking.Create(newEvent.Id);
+            await context.Bookings.AddAsync(booking);
+            await context.SaveChangesAsync();
+
+            // Act
+            await using var actContext = CreateContext();
+            var repository = new EventRepository(actContext);
+
+            var existEvent = await actContext.Events.FirstAsync(e => e.Id == newEvent.Id);
+            await repository.DeleteAsync(existEvent, default);
+
+            // Assert
+            await using var verifyContext = CreateContext();
+            var deletedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Id == newEvent.Id);
+            var deletedBooking = await verifyContext.Events.FirstOrDefaultAsync(b => b.Id == booking.Id);
+
+            Assert.Null(deletedEvent);
+            Assert.Null(deletedBooking);
         }
         #endregion
 

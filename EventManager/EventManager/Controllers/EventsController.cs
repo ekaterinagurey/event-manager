@@ -63,8 +63,8 @@ namespace EventManager.Controllers
         public async Task<ActionResult<BookingResponseDTO>> Book(Guid id)
         {
             var booking = await _bookingService.CreateBookingAsync(id);
-            return AcceptedAtAction(nameof(BookingsController.GetById), 
-                                    "Bookings", 
+            return AcceptedAtAction(nameof(BookingsController.GetById),
+                                    "Bookings",
                                     new { id = booking.Id },
                                     booking.ToResponse());
         }

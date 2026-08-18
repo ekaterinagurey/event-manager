@@ -106,7 +106,7 @@ namespace EventManager.BackgroundServices
                         await bookingRepository.UpdateAsync(booking, stoppingToken);
 
                         var currentEvent = await eventRepository.GetByIdAsync(booking.EventId, stoppingToken);
-                      
+
                         if (currentEvent != null)
                         {
                             currentEvent.ReleaseSeats();
@@ -118,7 +118,7 @@ namespace EventManager.BackgroundServices
                 }
                 catch (Exception exExt)
                 {
-                    _logger.LogError(exExt,$"Failed to reject booking {bookingId} after error");
+                    _logger.LogError(exExt, $"Failed to reject booking {bookingId} after error");
                 }
             }
         }

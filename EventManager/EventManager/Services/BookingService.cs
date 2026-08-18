@@ -10,7 +10,7 @@ namespace EventManager.Services
 {
     public sealed class BookingService : IBookingService
     {
-        private static readonly SemaphoreSlim BookingLock = new(1, 1);
+        private readonly SemaphoreSlim BookingLock = new(1, 1);
         private readonly IBookingRepository _bookingRepository;
         private readonly IEventRepository _eventRepository;
 
@@ -55,7 +55,7 @@ namespace EventManager.Services
 
         public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
         {
-            return await _bookingRepository.GetPendingAsync(cancellationToken); ;
+            return await _bookingRepository.GetPendingAsync(cancellationToken);
         }
     }
 }

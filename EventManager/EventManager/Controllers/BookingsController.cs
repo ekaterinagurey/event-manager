@@ -17,6 +17,7 @@ namespace EventManager.Controllers
             _bookingService = bookingService;
         }
 
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<Booking>> GetById(Guid id)
         {

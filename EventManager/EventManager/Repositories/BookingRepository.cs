@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.Repositories
 {
-    public class BookingRepository: IBookingRepository
+    public class BookingRepository : IBookingRepository
     {
         private readonly AppDbContext _context;
 

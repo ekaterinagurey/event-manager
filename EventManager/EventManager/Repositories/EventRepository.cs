@@ -46,7 +46,7 @@ namespace EventManager.Repositories
                 query = query.Where(x => x.EndAt <= to.Value);
             }
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await query.CountAsync(cancellationToken);
 
             var events = await query
                 .OrderBy(x => x.StartAt)

@@ -1,44 +1,26 @@
-﻿using Docker.DotNet.Models;
-using EventManager.DataAccess;
+﻿using EventManager.DataAccess;
+using EventManager.Exceptions;
+using EventManager.IntegrationTests.Infrastructure;
 using EventManager.Models;
 using EventManager.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Testcontainers.PostgreSql;
 
 namespace EventManager.IntegrationTests
 {
     [Collection("Postgres")]
-    public class BookingRepositoryTests : IAsyncLifetime
+    public class BookingRepositoryTests
     {
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-          .WithImage("postgres:16-alpine")
-          .WithDatabase("eventapi_test")
-          .WithUsername("postgres")
-          .WithPassword("postgres")
-          .Build();
+        private readonly PostgresFixture _fixture;
 
-        public async Task InitializeAsync()
+        public BookingRepositoryTests(PostgresFixture fixture)
         {
-            await _postgres.StartAsync();
-        }
-
-        public async Task DisposeAsync()
-        {
-            await _postgres.DisposeAsync();
+            _fixture = fixture;
         }
 
         private AppDbContext CreateContext()
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql(_postgres.GetConnectionString(),
+                .UseNpgsql(_fixture.ConnectionString,
                             npgsqlOptions =>
                             {
                                 npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
@@ -55,9 +37,9 @@ namespace EventManager.IntegrationTests
             await context.Database.MigrateAsync();
         }
 
-            #region GetByIdAsync Tests
-            //Тест на получение бронирования
-            [Fact]
+        #region GetByIdAsync Tests
+        //Тест на получение бронирования
+        [Fact]
         public async Task GetByIdAsync_ReturnsCorrectBooking()
         {
             await ResetDatabaseAsync();
@@ -74,7 +56,7 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             var booking = Booking.Create(newEvent.Id);
-            arrangeContext.Bookings.AddAsync(booking);
+            await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 
             // Act
@@ -122,7 +104,7 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             var booking = Booking.Create(newEvent.Id);
-            arrangeContext.Bookings.AddAsync(booking);
+            await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 
             // Act
@@ -168,6 +150,21 @@ namespace EventManager.IntegrationTests
             Assert.Equal(booking.EventId, result.EventId);
             Assert.Equal(booking.Id, result.Id);
         }
+
+        //Тест на создание бронирования с несуществующим event_id
+        [Fact]
+        public async Task CreateAsync_WithNonExistentEventId()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            var booking = Booking.Create(Guid.NewGuid());
+
+            // Act && Assert
+            await using var context = CreateContext();
+            var repository = new BookingRepository(context);
+            await Assert.ThrowsAsync<DbUpdateException>(() => repository.CreateAsync(booking, default));
+        }
         #endregion
 
         #region UpdateAsync Tests
@@ -189,7 +186,7 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             var booking = Booking.Create(newEvent.Id);
-            arrangeContext.Bookings.AddAsync(booking);
+            await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 
             // Act
