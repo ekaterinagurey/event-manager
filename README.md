@@ -17,6 +17,10 @@ Services/		- бизнес логика
 
 Для запуска приложения требуется **PostgreSQL**.
 
+### Миграции EF Core
+
+Схема базы данных управляется с помощью **миграций Entity Framework Core**.
+
 ### Настройка строки подключения
 
 Перед запуском приложения необходимо указать строку подключения к PostgreSQL в конфигурации приложения.
@@ -31,20 +35,42 @@ Services/		- бизнес логика
 }
 ```
 
-### Создание схемы базы данных
+## Создание миграции
 
-При запуске приложения схема базы данных создаётся автоматически с помощью EF Core:
+Для создания новой миграции выполните:
 
-```csharp
-context.Database.EnsureCreated();
+```bash
+dotnet ef migrations add InitialCreate
 ```
 
-Поэтому для первоначального запуска не требуется вручную создавать таблицы базы данных.
+где `InitialCreate` — имя миграции.
 
- PostgreSQL должен быть запущен и доступен по указанным в строке подключения параметрам.
+### Применение миграций
 
-### База данных в тестах
+Для применения миграций к базе данных:
 
+```bash
+dotnet ef database update
+```
+
+После выполнения команды EF Core создаст или обновит схему PostgreSQL в соответствии с миграциями.
+
+При запуске приложения схема также может быть автоматически обновлена через вызов:
+
+```csharp
+context.Database.Migrate();
+```
+
+> Для выполнения команд `dotnet ef` может потребоваться установить инструмент Entity Framework Core CLI:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+---
+
+
+### Unit-тесты
 Для юнит-тестов используется **Entity Framework Core InMemory Database**. Тесты не требуют подключения к PostgreSQL.
 
 Для каждого теста используется отдельное имя InMemory-базы:
@@ -58,6 +84,25 @@ services.AddDbContext<AppDbContext>(options =>
 
 Это позволяет изолировать данные разных тестов и выполнять тесты независимо от состояния реальной базы данных
 
+### Интеграционные тесты
+
+Для проверки работы репозиториев с реальным PostgreSQL используются интеграционные тесты на базе **Testcontainers**.
+
+При запуске интеграционных тестов автоматически создаётся контейнер PostgreSQL, в котором выполняются тесты репозиториев.
+
+Для запуска интеграционных тестов необходимо:
+
+1. Установить **Docker**.
+2. Убедиться, что Docker Engine запущен.
+3. Выполнить:
+
+```bash
+dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
+```
+
+Testcontainers самостоятельно создаёт и запускает PostgreSQL-контейнер на время выполнения тестов.
+
+
 ## Собрать проект
 dotnet build EventManager\EventManager\EventManager.csproj -c Debug 
 
@@ -69,9 +114,13 @@ http://localhost:<port>
 
 # Запуск тестов
 
-Для запуска всех тестов выполните:
+Для запуска Unit-тестов выполните:
 
 dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
+
+Для запуска интеграционных тестов выполните:
+
+dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
 
 # Swagger
 
