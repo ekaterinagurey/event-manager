@@ -38,18 +38,21 @@ namespace EventManager.IntegrationTests
         private AppDbContext CreateContext()
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql(_postgres.GetConnectionString())
+                .UseNpgsql(_postgres.GetConnectionString(),
+                            npgsqlOptions =>
+                            {
+                                npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                            })
                 .Options;
 
-            var context = new AppDbContext(options);
-            context.Database.EnsureCreated();
-            return context;
+            return new AppDbContext(options);
         }
 
         private async Task ResetDatabaseAsync()
         {
             await using var context = CreateContext();
             await context.Database.EnsureDeletedAsync();
+            await context.Database.MigrateAsync();
         }
 
         private async Task AddTestEventsAsync(int count = 5)
@@ -72,7 +75,6 @@ namespace EventManager.IntegrationTests
         //Тест на создание события
         [Fact]
         public async Task CreateAsync_SavesEventToDatabase()
-
         {
             await ResetDatabaseAsync();
 
@@ -83,7 +85,8 @@ namespace EventManager.IntegrationTests
                                       10);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             await repository.CreateAsync(newEvent, default);
 
             // Assert
@@ -94,7 +97,6 @@ namespace EventManager.IntegrationTests
             Assert.Equal("Test event", result.Title);
             Assert.Equal(10, result.TotalSeats);
             Assert.Equal(10, result.AvailableSeats);
-
         }
 
         #endregion
@@ -154,7 +156,8 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync(null, null, null, 2, 5);
 
             // Assert
@@ -172,7 +175,8 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync("Test event 1", null, null, 1, 5);
 
             // Assert
@@ -190,7 +194,8 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync(null, DateTime.UtcNow.AddDays(3), null, 1, 5);
 
             // Assert
@@ -208,7 +213,8 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync(null, null, DateTime.UtcNow.AddDays(3), 1, 5);
 
             // Assert
@@ -226,13 +232,13 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync(null,
                                                         DateTime.UtcNow.AddDays(1),
                                                         DateTime.UtcNow.AddDays(8),
                                                         1,
                                                         5);
-
             // Assert
             Assert.Equal(6, result.TotalCount);
             Assert.Equal(5, result.Events.Count);
@@ -248,7 +254,8 @@ namespace EventManager.IntegrationTests
             await AddTestEventsAsync(15);
 
             // Act
-            var repository = new EventRepository(CreateContext());
+            await using var context = CreateContext();
+            var repository = new EventRepository(context);
             var result = await repository.GetPagedAsync("Test Event 1",
                                                         DateTime.UtcNow.AddDays(7),
                                                         DateTime.UtcNow.AddDays(13),
@@ -259,7 +266,6 @@ namespace EventManager.IntegrationTests
             Assert.Equal(3, result.TotalCount);
             Assert.Equal(3, result.Events.Count);
         }
-
 
         #endregion
 
@@ -283,13 +289,14 @@ namespace EventManager.IntegrationTests
 
             // Act
             await using var actContext = CreateContext();
+            var repository = new EventRepository(actContext);
+
             newEvent.Update("Новое название",
                             newEvent.StartAt,
                             newEvent.EndAt,
                             newEvent.Description);
 
-            actContext.Events.Update(newEvent);
-            await actContext.SaveChangesAsync();
+            await repository.UpdateAsync(newEvent, default);
 
             // Assert
             await using var verifyContext = CreateContext();
@@ -318,9 +325,10 @@ namespace EventManager.IntegrationTests
 
             // Act
             await using var actContext = CreateContext();
+            var repository = new EventRepository(actContext);
+
             var existEvent = await actContext.Events.FirstAsync(e => e.Id == newEvent.Id);
-            actContext.Events.Remove(existEvent);
-            await actContext.SaveChangesAsync();
+            await repository.DeleteAsync(existEvent, default);
 
             // Assert
             await using var verifyContext = CreateContext();

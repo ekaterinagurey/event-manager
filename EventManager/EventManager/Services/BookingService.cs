@@ -34,6 +34,8 @@ namespace EventManager.Services
                     throw new NoAvailableSeatsException("No available seats for this event");
                 }
 
+                await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+
                 var booking = Booking.Create(eventId);
                 await _bookingRepository.CreateAsync(booking, cancellationToken);
                 return booking;

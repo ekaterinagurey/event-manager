@@ -4,6 +4,7 @@ using EventManager.Models;
 using EventManager.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,23 +38,26 @@ namespace EventManager.IntegrationTests
         private AppDbContext CreateContext()
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql(_postgres.GetConnectionString())
+                .UseNpgsql(_postgres.GetConnectionString(),
+                            npgsqlOptions =>
+                            {
+                                npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
+                            })
                 .Options;
 
-            var context = new AppDbContext(options);
-            context.Database.EnsureCreated();
-            return context;
+            return new AppDbContext(options);
         }
 
         private async Task ResetDatabaseAsync()
         {
             await using var context = CreateContext();
             await context.Database.EnsureDeletedAsync();
+            await context.Database.MigrateAsync();
         }
 
-        #region GetByIdAsync Tests
-        //Тест на получение бронирования
-        [Fact]
+            #region GetByIdAsync Tests
+            //Тест на получение бронирования
+            [Fact]
         public async Task GetByIdAsync_ReturnsCorrectBooking()
         {
             await ResetDatabaseAsync();
@@ -74,7 +78,8 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             // Act
-            var repository = new BookingRepository(CreateContext());
+            await using var actContext = CreateContext();
+            var repository = new BookingRepository(actContext);
             var result = await repository.GetByIdAsync(booking.Id, default);
 
             // Assert
@@ -96,7 +101,6 @@ namespace EventManager.IntegrationTests
             var result = await repository.GetByIdAsync(Guid.NewGuid(), default);
             Assert.Null(result);
         }
-
         #endregion
 
         #region GetPendingAsync Tests
@@ -122,7 +126,8 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             // Act
-            var repository = new BookingRepository(CreateContext());
+            await using var actContext = CreateContext();
+            var repository = new BookingRepository(actContext);
             var result = await repository.GetPendingAsync(default);
 
             // Assert
@@ -136,7 +141,6 @@ namespace EventManager.IntegrationTests
         //Тест на создание бронирования
         [Fact]
         public async Task CreateAsync_SavesBookingToDatabase()
-
         {
             await ResetDatabaseAsync();
 
@@ -151,7 +155,8 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             // Act
-            var repository = new BookingRepository(CreateContext());
+            await using var actContext = CreateContext();
+            var repository = new BookingRepository(actContext);
             var booking = Booking.Create(newEvent.Id);
             await repository.CreateAsync(booking, default);
 
@@ -170,7 +175,6 @@ namespace EventManager.IntegrationTests
         //Тест изменение бронирования
         [Fact]
         public async Task UpdateAsync_ChangesFieldInDatabase()
-
         {
             await ResetDatabaseAsync();
 
@@ -189,7 +193,8 @@ namespace EventManager.IntegrationTests
             await arrangeContext.SaveChangesAsync();
 
             // Act
-            var repository = new BookingRepository(CreateContext());
+            await using var actContext = CreateContext();
+            var repository = new BookingRepository(actContext);
             booking.Confirm();
             await repository.UpdateAsync(booking, default);
 
