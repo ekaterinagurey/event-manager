@@ -26,25 +26,79 @@ Services/		- бизнес логика
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5450;Database=eventapi;Username=postgres;Password=your_password"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=${POSTGRES_PASSWORD}"
   }
 }
 ```
 
-### Создание схемы базы данных
+### Конфигурация и управление секретами
 
-При запуске приложения схема базы данных создаётся автоматически с помощью EF Core:
+Приложение запускается локально (через IDE или dotnet run), 
+а база данных запускается через Docker Compose. 
 
-```csharp
-context.Database.EnsureCreated();
+#### Запуск базы данных
+При запуске базы данных через Docker Compose пароль к PostgreSQL передаётся через переменные окружения файла `.env`.
+
+**Создайте файл `.env`** в корне репозитория (рядом с `docker-compose.yml`) на основе шаблона .env.example.
+Пример:
+POSTGRES_PASSWORD=your_secure_password
+
+#### Локальный запуск приложения через IDE
+При локальном запуске приложения через IDE или через терминал (`dotnet run`) пароль к PostgreSQL хранится с 
+использованием встроенного инструмента **.NET Secret Manager (`dotnet user-secrets`)**.
+
+ Настройка **user-secrets** через CLI (Терминал)
+
+1. **Инициализация хранилища секретов** (создает уникальный `<UserSecretsId>` в файле `.csproj`):
+   ```bash
+   dotnet user-secrets init
+    ```
+
+2. Добавление пароля к базе данных:
+    ```bash
+    dotnet user-secrets set "POSTGRES_PASSWORD" "your_local_password"
+    ```  
+
+### Миграции EF Core
+
+Схема базы данных управляется с помощью **миграций Entity Framework Core**.
+
+## Создание миграции
+
+Для создания новой миграции выполните:
+
+```bash
+dotnet ef migrations add InitialCreate
 ```
 
-Поэтому для первоначального запуска не требуется вручную создавать таблицы базы данных.
+где `InitialCreate` — имя миграции.
 
- PostgreSQL должен быть запущен и доступен по указанным в строке подключения параметрам.
+### Применение миграций
 
-### База данных в тестах
+Для применения миграций к базе данных:
 
+```bash
+dotnet ef database update
+```
+
+После выполнения команды EF Core создаст или обновит схему PostgreSQL в соответствии с миграциями.
+
+При запуске приложения схема также может быть автоматически обновлена через вызов:
+
+```csharp
+context.Database.Migrate();
+```
+
+> Для выполнения команд `dotnet ef` может потребоваться установить инструмент Entity Framework Core CLI:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+---
+
+
+### Unit-тесты
 Для юнит-тестов используется **Entity Framework Core InMemory Database**. Тесты не требуют подключения к PostgreSQL.
 
 Для каждого теста используется отдельное имя InMemory-базы:
@@ -58,6 +112,25 @@ services.AddDbContext<AppDbContext>(options =>
 
 Это позволяет изолировать данные разных тестов и выполнять тесты независимо от состояния реальной базы данных
 
+### Интеграционные тесты
+
+Для проверки работы репозиториев с реальным PostgreSQL используются интеграционные тесты на базе **Testcontainers**.
+
+При запуске интеграционных тестов автоматически создаётся контейнер PostgreSQL, в котором выполняются тесты репозиториев.
+
+Для запуска интеграционных тестов необходимо:
+
+1. Установить **Docker**.
+2. Убедиться, что Docker Engine запущен.
+3. Выполнить:
+
+```bash
+dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
+```
+
+Testcontainers самостоятельно создаёт и запускает PostgreSQL-контейнер на время выполнения тестов.
+
+
 ## Собрать проект
 dotnet build EventManager\EventManager\EventManager.csproj -c Debug 
 
@@ -69,9 +142,17 @@ http://localhost:<port>
 
 # Запуск тестов
 
-Для запуска всех тестов выполните:
+Для запуска Unit-тестов выполните:
 
+```bash
 dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
+```
+
+Для запуска интеграционных тестов выполните:
+
+```bash
+dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
+```
 
 # Swagger
 
@@ -202,29 +283,15 @@ GET /bookings/{id}
 
 ## Используемые примитивы синхронизации
 
-### lock
-
-В `BookingService` используется
-
-```
-lock (_bookingLock)
-```
-
-Блокировка защищает критическую секцию при создании бронирования.
-
-Это предотвращает ситуацию, когда несколько потоков одновременно резервируют одно и то же место (овербукинг).
-
----
-
 ### SemaphoreSlim
 
-В `BookingBackgroundService` используется
+В `BookingService` используется
 
 ```
 private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
 ```
 
-`SemaphoreSlim` применяется для синхронизации асинхронной обработки бронирований.
+`SemaphoreSlim` применяется для предотвращения состояния гонки (overbooking) при одновременных запросах на бронирование мест.
 
 ---
 
@@ -248,4 +315,4 @@ AvailableSeats = 5
 No available seats for this event
 ```
 
-Количество созданных бронирований  не превышает количество доступных мест благодаря синхронизации через `lock`.
+Количество созданных бронирований  не превышает количество доступных мест.

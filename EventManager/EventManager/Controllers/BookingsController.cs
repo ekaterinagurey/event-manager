@@ -1,7 +1,7 @@
 ﻿using EventManager.DTOs.Bookings;
-using EventManager.Interfaces;
 using EventManager.Mappers;
 using EventManager.Models;
+using EventManager.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.Controllers
@@ -17,6 +17,7 @@ namespace EventManager.Controllers
             _bookingService = bookingService;
         }
 
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<Booking>> GetById(Guid id)
         {

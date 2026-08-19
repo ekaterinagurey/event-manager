@@ -1,14 +1,16 @@
 ﻿using EventManager.BackgroundServices;
+using EventManager.DataAccess;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
 using EventManager.Models;
+using EventManager.Repositories;
+using EventManager.Repositories.Interfaces;
+using EventManager.Services;
+using EventManager.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using EventManager.Interfaces;
-using EventManager.Services;
-using EventManager.DataAccess;
 using Moq;
-using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.Tests
 {
@@ -25,6 +27,8 @@ namespace EventManager.Tests
             var services = new ServiceCollection();
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
+            services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
             services.AddScoped<IEventService, EventService>();
             services.AddScoped<IBookingService, BookingService>();
             services.AddLogging();
@@ -34,7 +38,6 @@ namespace EventManager.Tests
             _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
             _bookingService = _scope.ServiceProvider.GetRequiredService<IBookingService>();
         }
-
         public void Dispose()
         {
             _scope.Dispose();
@@ -336,7 +339,7 @@ namespace EventManager.Tests
         #region Confirm & Reject Tests
         //Тест проверяет, что после вызова Confirm() бронь возвращает статус Confirmed и заполненный ProcessedAt
         [Fact]
-        public async Task Confirm_ShouldChangeStatus()
+        public void Confirm_ShouldChangeStatus()
         {
             //Arrange
             var booking = Booking.Create(Guid.NewGuid());

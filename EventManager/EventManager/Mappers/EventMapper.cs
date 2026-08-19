@@ -7,9 +7,9 @@ namespace EventManager.Mappers
     {
         public static Event ToEntity(this CreateEventDTO eventDTO)
         {
-            return Event.Create(eventDTO.Title, 
+            return Event.Create(eventDTO.Title,
                                 eventDTO.StartAt,
-                                eventDTO.EndAt, 
+                                eventDTO.EndAt,
                                 eventDTO.TotalSeats,
                                 eventDTO.Description);
 
@@ -25,7 +25,7 @@ namespace EventManager.Mappers
                 StartAt = currentEvent.StartAt,
                 EndAt = currentEvent.EndAt,
                 TotalSeats = currentEvent.TotalSeats,
-                AvailableSeats = currentEvent.AvailableSeats    
+                AvailableSeats = currentEvent.AvailableSeats
             };
         }
         public static Event ToEntity(this EventInfoDTO eventDTO)

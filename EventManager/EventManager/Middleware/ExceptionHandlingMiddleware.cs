@@ -31,10 +31,9 @@ namespace EventManager.Middleware
         {
             _logger.LogError(
                 ex,
-                "Unhandled exception. Method={Method}, Path={Path}, RequestId={RequestId}",
+                "Unhandled exception. Method={Method}, Path={Path}",
                 httpContext.Request.Method,
-                httpContext.Request.Path,
-                httpContext.Request.Headers["x-request-id"]);
+                httpContext.Request.Path);
 
             if (httpContext.Response.HasStarted)
             {

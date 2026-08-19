@@ -2,16 +2,18 @@
 using EventManager.DTOs;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
-using EventManager.Interfaces;
 using EventManager.Mappers;
 using EventManager.Models;
+using EventManager.Repositories;
+using EventManager.Repositories.Interfaces;
 using EventManager.Services;
+using EventManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventManager.Tests
 {
-    public class EventServiceTests
+    public class EventServiceTests: IDisposable
     {
         private readonly ServiceProvider _serviceProvider;
         private readonly IServiceScope _scope;
@@ -23,6 +25,7 @@ namespace EventManager.Tests
             var services = new ServiceCollection();
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
+            services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IEventService, EventService>();
 
             _serviceProvider = services.BuildServiceProvider();

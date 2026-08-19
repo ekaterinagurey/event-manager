@@ -1,7 +1,7 @@
 ﻿using EventManager.DataAccess;
 using EventManager.Exceptions;
-using EventManager.Interfaces;
 using EventManager.Models;
+using EventManager.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -29,14 +29,14 @@ namespace EventManager.BackgroundServices
                 try
                 {
                     _logger.LogInformation("BookingProcessingService started.");
-                    List<Booking> pendingBookings;
+                    IEnumerable<Booking> pendingBookings;
 
                     using (var scope = _scopeFactory.CreateScope())
                     {
-                        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                        pendingBookings = await context.Bookings
-                            .Where(b => b.Status == BookingStatus.Pending)
-                            .ToListAsync(stoppingToken);
+                        var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                        var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+
+                        pendingBookings = await bookingRepository.GetPendingAsync(stoppingToken);
                     }
 
                     var tasks = pendingBookings.Select(b =>
@@ -63,24 +63,26 @@ namespace EventManager.BackgroundServices
                 await Task.Delay(ProcessingDelay, stoppingToken);
 
                 using var scope = _scopeFactory.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
-                var booking = await context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, stoppingToken);
+                var booking = await bookingRepository.GetByIdAsync(bookingId, stoppingToken);
                 if (booking == null || booking.Status != BookingStatus.Pending)
                     return;
 
-                var currentEvent = await context.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, stoppingToken);
+                var currentEvent = await eventRepository.GetByIdAsync(booking.EventId, stoppingToken);
+
                 if (currentEvent == null)
                 {
                     booking.Reject();
-                    await context.SaveChangesAsync(stoppingToken);
+                    await bookingRepository.UpdateAsync(booking, stoppingToken);
 
                     _logger.LogWarning("Booking {BookingId} rejected", booking.Id);
                     return;
                 }
 
                 booking.Confirm();
-                await context.SaveChangesAsync(stoppingToken);
+                await bookingRepository.UpdateAsync(booking, stoppingToken);
 
                 _logger.LogInformation($"Booking {booking.Id} confirmed.");
             }
@@ -93,24 +95,30 @@ namespace EventManager.BackgroundServices
                 try
                 {
                     using var scope = _scopeFactory.CreateScope();
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                    var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
-                    var booking = await context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, stoppingToken);
+                    var booking = await bookingRepository.GetByIdAsync(bookingId, stoppingToken);
+
                     if (booking != null)
                     {
                         booking.Reject();
+                        await bookingRepository.UpdateAsync(booking, stoppingToken);
 
-                        var currentEvent = await context.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, stoppingToken);
+                        var currentEvent = await eventRepository.GetByIdAsync(booking.EventId, stoppingToken);
+
                         if (currentEvent != null)
+                        {
                             currentEvent.ReleaseSeats();
+                            await eventRepository.UpdateAsync(currentEvent, stoppingToken);
+                        }
 
-                        await context.SaveChangesAsync(stoppingToken);
                         _logger.LogError(ex, $"Booking {bookingId} rejected due to processing error");
                     }
                 }
                 catch (Exception exExt)
                 {
-                    _logger.LogError(exExt,$"Failed to reject booking {bookingId} after error");
+                    _logger.LogError(exExt, $"Failed to reject booking {bookingId} after error");
                 }
             }
         }

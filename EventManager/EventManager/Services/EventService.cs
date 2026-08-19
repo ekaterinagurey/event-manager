@@ -1,9 +1,10 @@
 ﻿using EventManager.DataAccess;
 using EventManager.DTOs.Events;
 using EventManager.Exceptions;
-using EventManager.Interfaces;
 using EventManager.Mappers;
 using EventManager.Models;
+using EventManager.Repositories.Interfaces;
+using EventManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -11,52 +12,36 @@ namespace EventManager.Services
 {
     public class EventService : IEventService
     {
-        private readonly AppDbContext _context;
-        public EventService(AppDbContext context)
+        private readonly IEventRepository _eventRepository;
+        public EventService(IEventRepository eventRepository)
         {
-            _context = context;
+            _eventRepository = eventRepository;
         }
 
         public async Task<PaginateResultDTO<Event>> GetEventsAsync(GetEventsRequestDTO filter, CancellationToken cancellationToken = default)
         {
-            var query = _context.Events.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(filter.Title))
-            {
-                query = query.Where(x => x.Title.Contains(filter.Title, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (filter.From.HasValue)
-            {
-                query = query.Where(x => x.StartAt >= filter.From.Value);
-            }
-
-            if (filter.To.HasValue)
-            {
-                query = query.Where(x => x.EndAt <= filter.To.Value);
-            }
-
-            var totalItems = query.Count();
-
-            var items = await query
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync(cancellationToken);
+            var events = await _eventRepository.GetPagedAsync(filter.Title,
+                                                              filter.From,
+                                                              filter.To,
+                                                              filter.Page,
+                                                              filter.PageSize,
+                                                              cancellationToken);
 
             return new PaginateResultDTO<Event>
             {
-                TotalCount = totalItems,
+                TotalCount = events.TotalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize,
-                Items = items
+                Items = events.Events
             };
         }
 
         public async Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var eventEntity = await _context.Events.FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            var existingEvent = await _eventRepository.GetByIdAsync(id, cancellationToken)
            ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
-            return eventEntity;
+            return existingEvent;
         }
 
         public async Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent, CancellationToken cancellationToken = default)
@@ -73,30 +58,30 @@ namespace EventManager.Services
                                             newEvent.TotalSeats,
                                             newEvent.Description);
 
-            await _context.Events.AddAsync(createdEvent, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _eventRepository.CreateAsync(createdEvent, cancellationToken);
             return createdEvent.ToResponse();
         }
 
         public async Task<EventInfoDTO> UpdateEventAsync(Guid id, UpdateEventDTO editingEvent, CancellationToken cancellationToken = default)
         {
-            var exitingEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            var existingEvent = await _eventRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
-            exitingEvent.Update(editingEvent.Title, editingEvent.StartAt, editingEvent.EndAt, editingEvent.Description);
-            await _context.SaveChangesAsync(cancellationToken);
-            return exitingEvent.ToResponse();
+            existingEvent.Update(editingEvent.Title,
+                                 editingEvent.StartAt,
+                                 editingEvent.EndAt,
+                                 editingEvent.Description);
+
+            await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+            return existingEvent.ToResponse();
         }
 
         public async Task<bool> RemoveEventAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var exitingEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            var existingEvent = await _eventRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
-            if (exitingEvent == null)
-                throw new NotFoundException($"Событие с id = {id} не найдено.");
-
-            _context.Events.Remove(exitingEvent);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _eventRepository.DeleteAsync(existingEvent, cancellationToken);
             return true;
         }
     }
