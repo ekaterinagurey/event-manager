@@ -3,7 +3,10 @@ using EventManager.Exceptions;
 using EventManager.IntegrationTests.Infrastructure;
 using EventManager.Models;
 using EventManager.Repositories;
+using EventManager.Services;
+using EventManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 namespace EventManager.IntegrationTests
 {
@@ -164,6 +167,36 @@ namespace EventManager.IntegrationTests
             await using var context = CreateContext();
             var repository = new BookingRepository(context);
             await Assert.ThrowsAsync<DbUpdateException>(() => repository.CreateAsync(booking, default));
+        }
+
+        //Тест проверяет, что создание брони уменьшает AvailableSeats на 1
+        [Fact]
+        public async Task CreateAsync_ShouldDecreaseAvailableSeats()
+        {
+            await ResetDatabaseAsync();
+
+            // Arrange
+            await using var arrangeContext = CreateContext();
+            var newEvent = Event.Create("Test event",
+                                      DateTime.UtcNow,
+                                      DateTime.UtcNow.AddHours(1),
+                                      10);
+
+            arrangeContext.Events.Add(newEvent);
+            await arrangeContext.SaveChangesAsync();
+
+            // Act
+            await using var actContext = CreateContext();
+            var bookingRepository = new BookingRepository(actContext);
+            var eventRepository = new EventRepository(actContext);
+            var bookingService = new BookingService(bookingRepository, eventRepository);
+           
+            var booking = await bookingService.CreateBookingAsync(newEvent.Id);
+
+            //Assert
+            await using var verifyContext = CreateContext();
+            var updated = await verifyContext.Events.FirstAsync(b => b.Id == newEvent.Id);
+            Assert.Equal(9, updated.AvailableSeats);
         }
         #endregion
 

@@ -66,7 +66,7 @@ namespace EventManager.Models
             if (endAt <= startAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");
 
-            Title = title!;
+            Title = title!.Trim();
             StartAt = startAt!.Value;
             EndAt = endAt!.Value;
             Description = description!;

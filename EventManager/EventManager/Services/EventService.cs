@@ -68,9 +68,9 @@ namespace EventManager.Services
             ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
             existingEvent.Update(editingEvent.Title,
-                                editingEvent.StartAt,
-                                editingEvent.EndAt,
-                                editingEvent.Description);
+                                 editingEvent.StartAt,
+                                 editingEvent.EndAt,
+                                 editingEvent.Description);
 
             await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
             return existingEvent.ToResponse();

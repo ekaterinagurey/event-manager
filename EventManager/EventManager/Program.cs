@@ -7,13 +7,35 @@ using EventManager.Services;
 using EventManager.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
+//Запонение пароля в connectionString
+// 1. Считываем базовую строку подключения из appsettings.json
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// 2. Считываем пароль: Configuration проверяет user-secrets и Environment Variables
+var postgresPassword = builder.Configuration["POSTGRES_PASSWORD"]
+    ?? Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+
+// 3. Подставляем пароль через NpgsqlConnectionStringBuilder
+var connectionStringBuilder = new NpgsqlConnectionStringBuilder(rawConnectionString);
+
+if (!string.IsNullOrWhiteSpace(postgresPassword))
+{
+    connectionStringBuilder.Password = postgresPassword;
+}
+
+// 5. Регистрируем DbContext с готовой строкой
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.UseNpgsql(connectionStringBuilder.ConnectionString));
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionStringBuilder.ConnectionString,
                       npgsqlOptions =>
                             {
                                 npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);

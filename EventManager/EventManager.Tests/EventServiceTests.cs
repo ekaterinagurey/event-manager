@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventManager.Tests
 {
-    public class EventServiceTests
+    public class EventServiceTests: IDisposable
     {
         private readonly ServiceProvider _serviceProvider;
         private readonly IServiceScope _scope;

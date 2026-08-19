@@ -348,7 +348,7 @@ namespace EventManager.IntegrationTests
             // Assert
             await using var verifyContext = CreateContext();
             var deletedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Id == newEvent.Id);
-            var deletedBooking = await verifyContext.Events.FirstOrDefaultAsync(b => b.Id == booking.Id);
+            var deletedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.Id == booking.Id);
 
             Assert.Null(deletedEvent);
             Assert.Null(deletedBooking);

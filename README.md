@@ -17,10 +17,6 @@ Services/		- бизнес логика
 
 Для запуска приложения требуется **PostgreSQL**.
 
-### Миграции EF Core
-
-Схема базы данных управляется с помощью **миграций Entity Framework Core**.
-
 ### Настройка строки подключения
 
 Перед запуском приложения необходимо указать строку подключения к PostgreSQL в конфигурации приложения.
@@ -30,10 +26,42 @@ Services/		- бизнес логика
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5450;Database=eventapi;Username=postgres;Password=your_password"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=${POSTGRES_PASSWORD}"
   }
 }
 ```
+
+### Конфигурация и управление секретами
+
+Приложение запускается локально (через IDE или dotnet run), 
+а база данных запускается через Docker Compose. 
+
+#### Запуск базы данных
+При запуске базы данных через Docker Compose пароль к PostgreSQL передаётся через переменные окружения файла `.env`.
+
+**Создайте файл `.env`** в корне репозитория (рядом с `docker-compose.yml`) на основе шаблона .env.example.
+Пример:
+POSTGRES_PASSWORD=your_secure_password
+
+#### Локальный запуск приложения через IDE
+При локальном запуске приложения через IDE или через терминал (`dotnet run`) пароль к PostgreSQL хранится с 
+использованием встроенного инструмента **.NET Secret Manager (`dotnet user-secrets`)**.
+
+ Настройка **user-secrets** через CLI (Терминал)
+
+1. **Инициализация хранилища секретов** (создает уникальный `<UserSecretsId>` в файле `.csproj`):
+   ```bash
+   dotnet user-secrets init
+    ```
+
+2. Добавление пароля к базе данных:
+    ```bash
+    dotnet user-secrets set "POSTGRES_PASSWORD" "your_local_password"
+    ```  
+
+### Миграции EF Core
+
+Схема базы данных управляется с помощью **миграций Entity Framework Core**.
 
 ## Создание миграции
 
@@ -116,11 +144,15 @@ http://localhost:<port>
 
 Для запуска Unit-тестов выполните:
 
+```bash
 dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
+```
 
 Для запуска интеграционных тестов выполните:
 
+```bash
 dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
+```
 
 # Swagger
 
