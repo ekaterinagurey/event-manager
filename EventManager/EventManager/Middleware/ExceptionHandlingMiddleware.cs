@@ -1,4 +1,4 @@
-﻿using EventManager.Exceptions;
+﻿using EventManager.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 

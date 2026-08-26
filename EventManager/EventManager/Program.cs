@@ -1,13 +1,14 @@
-using EventManager.BackgroundServices;
-using EventManager.DataAccess;
+using EventManager.Application.BackgroundServices;
+using EventManager.Infrastructure.DataAccess;
 using EventManager.Middleware;
 using EventManager.Repositories;
-using EventManager.Repositories.Interfaces;
-using EventManager.Services;
-using EventManager.Services.Interfaces;
+using EventManager.Application.Repositories.Interfaces;
+using EventManager.Application.Services;
+using EventManager.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using EventManager.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
