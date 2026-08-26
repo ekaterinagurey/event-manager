@@ -2,11 +2,8 @@
 using EventManager.Application.DTOs.Events;
 using EventManager.Application.Mappers;
 using EventManager.Domain.Models;
-using EventManager.Application.Services;
 using EventManager.Application.Services.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace EventManager.Controllers
 {
