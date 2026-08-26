@@ -1,12 +1,10 @@
-﻿using EventManager.DataAccess;
-using EventManager.Exceptions;
+﻿using EventManager.Infrastructure.DataAccess;
 using EventManager.IntegrationTests.Infrastructure;
-using EventManager.Models;
+using EventManager.Domain.Models;
 using EventManager.Repositories;
-using EventManager.Services;
-using EventManager.Services.Interfaces;
+using EventManager.Application.Services;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
+using EventManager.Infrastructure.Repositories;
 
 namespace EventManager.IntegrationTests
 {

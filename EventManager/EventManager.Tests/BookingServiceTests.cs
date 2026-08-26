@@ -1,16 +1,17 @@
-﻿using EventManager.BackgroundServices;
-using EventManager.DataAccess;
-using EventManager.DTOs.Events;
-using EventManager.Exceptions;
-using EventManager.Models;
-using EventManager.Repositories;
-using EventManager.Repositories.Interfaces;
-using EventManager.Services;
-using EventManager.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using EventManager.Application.BackgroundServices;
+using EventManager.Application.DTOs.Events;
+using EventManager.Domain.Exceptions;
+using EventManager.Domain.Models;
+using EventManager.Application.Services;
+using EventManager.Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using EventManager.Infrastructure.DataAccess;
+using Microsoft.EntityFrameworkCore;
+using EventManager.Application.Repositories.Interfaces;
+using EventManager.Repositories;
+using EventManager.Infrastructure.Repositories;
 
 namespace EventManager.Tests
 {
