@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using EventManager.Domain.Exceptions;
 
 namespace EventManager.Domain.Models
 {
@@ -40,7 +40,7 @@ namespace EventManager.Domain.Models
                                    string? description = null)
         {
             if (totalSeats <= 0)
-                throw new ValidationException("Общее количество мест должно быть больше 0.");
+                throw new DomainValidationException("Общее количество мест должно быть больше 0.");
 
             if (endAt <= startAt)
                 throw new ArgumentException("EndAt должна быть позже StartAt.");

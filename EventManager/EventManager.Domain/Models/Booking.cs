@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using EventManager.Domain.Exceptions;
 
 namespace EventManager.Domain.Models
 {
@@ -30,7 +30,7 @@ namespace EventManager.Domain.Models
         public static Booking Create(Guid eventId)
         {
             if (eventId == Guid.Empty)
-                throw new ValidationException("EventId не может быть пустым.");
+                throw new DomainValidationException("EventId не может быть пустым.");
 
             return new Booking(Guid.NewGuid(),
                                eventId,

@@ -1,8 +1,7 @@
+using EventManager.Application;
 using EventManager.Infrastructure;
-using EventManager.Infrastructure.DataAccess;
 using EventManager.Middleware;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,12 +35,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -52,5 +45,8 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+// Infrastructure - Migrations
+await app.Services.ApplyMigrationsAsync();
 
 app.Run();

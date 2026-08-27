@@ -1,7 +1,4 @@
-﻿using EventManager.Application.BackgroundServices;
-using EventManager.Application.Repositories.Interfaces;
-using EventManager.Application.Services;
-using EventManager.Application.Services.Interfaces;
+﻿using EventManager.Application.Repositories.Interfaces;
 using EventManager.Infrastructure.DataAccess;
 using EventManager.Infrastructure.Repositories;
 using EventManager.Repositories;
@@ -36,9 +33,6 @@ namespace EventManager.Infrastructure
 
             // 5. Регистрируем DbContext с готовой строкой
             services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionStringBuilder.ConnectionString));
-
-            services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionStringBuilder.ConnectionString,
                                   npgsqlOptions =>
                                   {
@@ -51,12 +45,13 @@ namespace EventManager.Infrastructure
             return services;
         }
 
-        public static IServiceCollection AddApplication(this IServiceCollection services)
+        public static async Task ApplyMigrationsAsync(this IServiceProvider services)
         {
-            services.AddScoped<IEventService, EventService>();
-            services.AddScoped<IBookingService, BookingService>();
-            services.AddHostedService<BookingProcessingService>();
-            return services;
+            using (var scope = services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.MigrateAsync();
+            }
         }
     }
 }
