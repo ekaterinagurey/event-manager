@@ -1,4 +1,4 @@
-﻿using EventManager.Exceptions;
+﻿using EventManager.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -57,7 +57,7 @@ namespace EventManager.Middleware
         private static int MapStatusCode(Exception ex)
             => ex switch
             {
-                ValidationException ve => StatusCodes.Status400BadRequest,
+                DomainValidationException ve => StatusCodes.Status400BadRequest,
                 NotFoundException nfe => StatusCodes.Status404NotFound,
                 ArgumentException are => StatusCodes.Status400BadRequest,
                 NoAvailableSeatsException nase => StatusCodes.Status409Conflict,

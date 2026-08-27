@@ -1,15 +1,12 @@
-﻿using EventManager.DataAccess;
-using EventManager.DTOs;
-using EventManager.DTOs.Events;
-using EventManager.Exceptions;
-using EventManager.Mappers;
-using EventManager.Models;
+﻿using EventManager.Application.DTOs.Events;
+using EventManager.Domain.Exceptions;
 using EventManager.Repositories;
-using EventManager.Repositories.Interfaces;
-using EventManager.Services;
-using EventManager.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using EventManager.Application.Services;
+using EventManager.Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using EventManager.Application.Repositories.Interfaces;
+using EventManager.Infrastructure.DataAccess;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.Tests
 {

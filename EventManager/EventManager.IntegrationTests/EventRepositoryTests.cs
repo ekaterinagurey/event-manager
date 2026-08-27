@@ -1,6 +1,6 @@
-﻿using EventManager.DataAccess;
+﻿using EventManager.Infrastructure.DataAccess;
 using EventManager.IntegrationTests.Infrastructure;
-using EventManager.Models;
+using EventManager.Domain.Models;
 using EventManager.Repositories;
 using Microsoft.EntityFrameworkCore;
 

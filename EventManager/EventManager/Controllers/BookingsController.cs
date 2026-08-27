@@ -1,7 +1,5 @@
-﻿using EventManager.DTOs.Bookings;
-using EventManager.Mappers;
-using EventManager.Models;
-using EventManager.Services.Interfaces;
+﻿using EventManager.Domain.Models;
+using EventManager.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.Controllers
