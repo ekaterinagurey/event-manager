@@ -4,6 +4,7 @@ using EventManager.Application.Repositories.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using EventManager.Domain.Enums;
 
 namespace EventManager.Application.BackgroundServices
 {

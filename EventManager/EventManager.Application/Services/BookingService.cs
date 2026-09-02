@@ -2,6 +2,7 @@
 using EventManager.Domain.Models;
 using EventManager.Application.Repositories.Interfaces;
 using EventManager.Application.Services.Interfaces;
+using EventManager.Domain.Enums;
 
 namespace EventManager.Application.Services
 {
@@ -10,6 +11,7 @@ namespace EventManager.Application.Services
         private readonly SemaphoreSlim BookingLock = new(1, 1);
         private readonly IBookingRepository _bookingRepository;
         private readonly IEventRepository _eventRepository;
+        private const int MaxActiveBookings = 3;
 
         public BookingService(IBookingRepository bookingRepository,
                               IEventRepository eventRepository)
@@ -18,7 +20,9 @@ namespace EventManager.Application.Services
             _eventRepository = eventRepository;
         }
 
-        public async Task<Booking> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
+        public async Task<Booking> CreateBookingAsync(Guid eventId,
+                                                      Guid userId,
+                                                      CancellationToken cancellationToken = default)
         {
             await BookingLock.WaitAsync(cancellationToken);
             try
@@ -28,12 +32,20 @@ namespace EventManager.Application.Services
 
                 if (!existingEvent.TryReserveSeats())
                 {
-                    throw new NoAvailableSeatsException("No available seats for this event");
+                    throw new NoAvailableSeatsException();
                 }
+
+                if (existingEvent.HasStarted())
+                    throw new PastEventBookingException();
+
+                var activeBookingsCount = await _bookingRepository.CountActiveByUserId(userId, cancellationToken);
+
+                if (activeBookingsCount >= MaxActiveBookings)
+                    throw new BookingLimitExceededException();
 
                 await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
 
-                var booking = Booking.Create(eventId);
+                var booking = Booking.Create(eventId, userId);
                 await _bookingRepository.CreateAsync(booking, cancellationToken);
                 return booking;
             }
@@ -53,6 +65,23 @@ namespace EventManager.Application.Services
         public async Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default)
         {
             return await _bookingRepository.GetPendingAsync(cancellationToken);
+        }
+
+        public async Task CancelBookingAsync(Guid bookingId,
+                                             Guid userId,
+                                             UserRole userRole,
+                                             CancellationToken cancellationToken)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken)
+            ?? throw new NotFoundException($"Бронирование с id '{bookingId}' не найдено.");
+
+            if (userRole != UserRole.Admin &&
+               booking.UserId != userId)
+                throw new AccessDeniedException();
+
+            booking.Cancel();
+
+            await _bookingRepository.UpdateAsync(booking, cancellationToken);
         }
     }
 }
