@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using EventManager.Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
-using EventManager.Application.Repositories.Interfaces;
 using EventManager.Repositories;
 using EventManager.Infrastructure.Repositories;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Tests
 {

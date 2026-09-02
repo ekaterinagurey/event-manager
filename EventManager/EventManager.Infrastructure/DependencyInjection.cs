@@ -1,7 +1,10 @@
-﻿using EventManager.Application.Repositories.Interfaces;
+﻿using EventManager.Application.Interfaces.Authentication;
+using EventManager.Application.Interfaces.Repositories;
+using EventManager.Infrastructure.Authentication;
 using EventManager.Infrastructure.DataAccess;
 using EventManager.Infrastructure.Repositories;
 using EventManager.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +45,11 @@ namespace EventManager.Infrastructure
 
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IBookingRepository, BookingRepository>();
+
+            // 6. Аутентификация
+            services.Configure<JwtBearerOptions>(configuration.GetSection("Jwt"));
+            services.AddScoped<IPasswordHasher, IPasswordHasher>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
             return services;
         }
 

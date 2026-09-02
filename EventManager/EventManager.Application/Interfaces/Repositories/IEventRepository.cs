@@ -1,7 +1,7 @@
 ﻿using EventManager.Application.DTOs.Events;
 using EventManager.Domain.Models;
 
-namespace EventManager.Application.Repositories.Interfaces
+namespace EventManager.Application.Interfaces.Repositories
 {
     public interface IEventRepository
     {

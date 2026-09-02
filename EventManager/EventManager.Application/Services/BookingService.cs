@@ -1,8 +1,8 @@
 ﻿using EventManager.Domain.Exceptions;
 using EventManager.Domain.Models;
-using EventManager.Application.Repositories.Interfaces;
 using EventManager.Application.Services.Interfaces;
 using EventManager.Domain.Enums;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Application.Services
 {
