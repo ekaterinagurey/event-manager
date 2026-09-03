@@ -11,7 +11,7 @@ namespace EventManager.Application.Services
         private readonly SemaphoreSlim BookingLock = new(1, 1);
         private readonly IBookingRepository _bookingRepository;
         private readonly IEventRepository _eventRepository;
-        private const int MaxActiveBookings = 3;
+        private const int MaxActiveBookings = 10;
 
         public BookingService(IBookingRepository bookingRepository,
                               IEventRepository eventRepository)
