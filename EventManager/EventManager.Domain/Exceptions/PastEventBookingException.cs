@@ -3,7 +3,7 @@
     public class PastEventBookingException : Exception
     {
         public PastEventBookingException()
-         : base("Бронирование прошедшего события невозможно.")
+         : base("Booking a past event is not possible")
         {
         }
 

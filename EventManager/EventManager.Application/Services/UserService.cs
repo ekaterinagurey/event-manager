@@ -3,11 +3,6 @@ using EventManager.Application.Interfaces.Repositories;
 using EventManager.Application.Services.Interfaces;
 using EventManager.Domain.Enums;
 using EventManager.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EventManager.Application.Services
 {

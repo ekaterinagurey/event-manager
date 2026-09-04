@@ -1,5 +1,4 @@
-﻿using EventManager.Application.DTOs.Events;
-using EventManager.Domain.Models;
+﻿using EventManager.Domain.Models;
 
 namespace EventManager.Application.Interfaces.Repositories
 {

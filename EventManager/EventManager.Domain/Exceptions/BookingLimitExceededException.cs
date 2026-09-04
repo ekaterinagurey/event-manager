@@ -3,7 +3,7 @@
     public class BookingLimitExceededException : Exception
     {
         public BookingLimitExceededException()
-         : base("Лимит активных броней превышен.")
+         : base("The limit for active reservations has been exceeded")
         {
         }
 

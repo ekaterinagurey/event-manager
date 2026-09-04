@@ -3,7 +3,7 @@
     public class AccessDeniedException : Exception
     {
         public AccessDeniedException()
-         : base("Отсутствуют права на операцию.")
+         : base("Insufficient permissions for the operation")
         {
         }
 

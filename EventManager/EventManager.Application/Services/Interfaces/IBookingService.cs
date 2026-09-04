@@ -1,4 +1,5 @@
-﻿using EventManager.Domain.Models;
+﻿using EventManager.Domain.Enums;
+using EventManager.Domain.Models;
 
 namespace EventManager.Application.Services.Interfaces
 {
@@ -6,7 +7,7 @@ namespace EventManager.Application.Services.Interfaces
     {
         Task<Booking> CreateBookingAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default);
         Task<Booking> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
-
         Task<IEnumerable<Booking>> GetPendingBookingAsync(CancellationToken cancellationToken = default);
+        Task CancelBookingAsync(Guid bookingId, Guid userId, UserRole userRole, CancellationToken cancellationToken);
     }
 }

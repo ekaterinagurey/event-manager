@@ -8,7 +8,7 @@ using System.Text;
 
 namespace EventManager.Infrastructure.Authentication
 {
-    public class JwtTokenService: IJwtTokenService
+    public class JwtTokenService : IJwtTokenService
     {
         private readonly JwtOptions _options;
 
@@ -27,15 +27,15 @@ namespace EventManager.Infrastructure.Authentication
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret));
+            var creds = new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
 
             // Формирование объекта токена
             var token = new JwtSecurityToken(
-                issuer: "MyAuthServer",
-                audience: "MyApi",
+                issuer: "EventManager",
+                audience: "EventManagerClient",
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(15),
+                expires: DateTime.UtcNow.AddMinutes(_options.Expires),
                 signingCredentials: creds
             );
 

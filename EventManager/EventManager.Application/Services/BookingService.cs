@@ -76,7 +76,7 @@ namespace EventManager.Application.Services
             ?? throw new NotFoundException($"Бронирование с id '{bookingId}' не найдено.");
 
             if (userRole != UserRole.Admin &&
-               booking.UserId != userId)
+                booking.UserId != userId)
                 throw new AccessDeniedException();
 
             booking.Cancel();
