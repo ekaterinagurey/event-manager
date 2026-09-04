@@ -1,4 +1,5 @@
-﻿using EventManager.Domain.Models;
+﻿using EventManager.Domain.Enums;
+using EventManager.Domain.Models;
 
 namespace EventManager.Application.DTOs.Bookings
 {

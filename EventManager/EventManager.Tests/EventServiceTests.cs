@@ -4,9 +4,9 @@ using EventManager.Repositories;
 using EventManager.Application.Services;
 using EventManager.Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using EventManager.Application.Repositories.Interfaces;
 using EventManager.Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Tests
 {

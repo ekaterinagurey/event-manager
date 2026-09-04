@@ -2,9 +2,8 @@
 using EventManager.Domain.Exceptions;
 using EventManager.Application.Mappers;
 using EventManager.Domain.Models;
-using EventManager.Application.Repositories.Interfaces;
 using EventManager.Application.Services.Interfaces;
-using System.Reflection;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Application.Services
 {

@@ -9,6 +9,7 @@ namespace EventManager.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEventService, EventService>();
             services.AddScoped<IBookingService, BookingService>();
             services.AddHostedService<BookingProcessingService>();

@@ -61,6 +61,10 @@ namespace EventManager.Middleware
                 NotFoundException nfe => StatusCodes.Status404NotFound,
                 ArgumentException are => StatusCodes.Status400BadRequest,
                 NoAvailableSeatsException nase => StatusCodes.Status409Conflict,
+                AccessDeniedException ade => StatusCodes.Status403Forbidden,
+                PastEventBookingException pbe => StatusCodes.Status400BadRequest,
+                BookingLimitExceededException ble => StatusCodes.Status409Conflict,
+                UnauthorizedAccessException uae => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
     }
