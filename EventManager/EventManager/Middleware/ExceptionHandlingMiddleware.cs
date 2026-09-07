@@ -65,6 +65,7 @@ namespace EventManager.Middleware
                 PastEventBookingException pbe => StatusCodes.Status400BadRequest,
                 BookingLimitExceededException ble => StatusCodes.Status409Conflict,
                 UnauthorizedAccessException uae => StatusCodes.Status401Unauthorized,
+                InvalidOperationException ilope => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
     }

@@ -93,3 +93,4 @@ app.MapControllers();
 await app.Services.ApplyMigrationsAsync();
 
 app.Run();
+public partial class Program { }

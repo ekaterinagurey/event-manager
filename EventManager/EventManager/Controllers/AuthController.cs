@@ -4,6 +4,7 @@ using EventManager.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace EventManager.Controllers
 {
@@ -22,9 +23,18 @@ namespace EventManager.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequestDTO request, CancellationToken cancellationToken)
         {
+            if (string.Equals(request.Role.ToString(), nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    status = 400,
+                    detail = "Регистрация с правами администратора запрещена"
+                });
+            }
+
             await _userService.RegisterAsync(request.Login,
                                              request.Password,
-                                             request.Role,
+                                             UserRole.User,
                                              cancellationToken);
             return NoContent();
         }
