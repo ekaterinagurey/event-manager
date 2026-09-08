@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Nodes;
 
 namespace EventManager.IntegrationTests
@@ -21,7 +19,6 @@ namespace EventManager.IntegrationTests
         {
             _fixture = fixture;
         }
-
 
         //Вспомогательный метод для создания пользователя
         private async Task<string?> CreateUserAsync(HttpClient client,
@@ -55,8 +52,7 @@ namespace EventManager.IntegrationTests
             using var scope = _fixture.Factory.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-            var passwordHash = Convert.ToHexString(hashBytes);
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, 12);
             var admin = User.Create(login, passwordHash, UserRole.Admin);
 
             context.Users.Add(admin);

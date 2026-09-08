@@ -23,18 +23,17 @@ namespace EventManager.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequestDTO request, CancellationToken cancellationToken)
         {
-            if (string.Equals(request.Role.ToString(), nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase))
+            /*if (string.Equals(request.Role.ToString(), nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new
                 {
                     status = 400,
                     detail = "Регистрация с правами администратора запрещена"
                 });
-            }
+            }*/
 
             await _userService.RegisterAsync(request.Login,
                                              request.Password,
-                                             UserRole.User,
                                              cancellationToken);
             return NoContent();
         }

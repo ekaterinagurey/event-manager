@@ -24,6 +24,12 @@ namespace EventManager.Controllers
         public async Task<ActionResult<Booking>> GetById(Guid id)
         {
             var booking = await _bookingService.GetBookingByIdAsync(id);
+
+            var userId = User.GetUserId();
+
+            if (booking.UserId != userId && !User.IsInRole("Admin")) 
+                return Forbid();
+
             return Ok(booking);
         }
 

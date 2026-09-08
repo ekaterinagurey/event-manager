@@ -1,8 +1,9 @@
-﻿using EventManager.Domain.Exceptions;
-using EventManager.Domain.Models;
+﻿using EventManager.Application.Interfaces.Repositories;
 using EventManager.Application.Services.Interfaces;
 using EventManager.Domain.Enums;
-using EventManager.Application.Interfaces.Repositories;
+using EventManager.Domain.Exceptions;
+using EventManager.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace EventManager.Application.Services
 {
@@ -78,6 +79,12 @@ namespace EventManager.Application.Services
             if (userRole != UserRole.Admin &&
                 booking.UserId != userId)
                 throw new AccessDeniedException();
+
+            var existingEvent = await _eventRepository.GetByIdAsync(booking.EventId, cancellationToken)
+                 ?? throw new NotFoundException("Event not found");
+
+            if (existingEvent.StartAt <= DateTime.UtcNow)
+                throw new EventAlreadyStartedException(existingEvent.Id);
 
             booking.Cancel();
 

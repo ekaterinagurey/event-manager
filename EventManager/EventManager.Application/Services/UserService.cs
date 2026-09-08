@@ -2,6 +2,7 @@
 using EventManager.Application.Interfaces.Repositories;
 using EventManager.Application.Services.Interfaces;
 using EventManager.Domain.Enums;
+using EventManager.Domain.Exceptions;
 using EventManager.Domain.Models;
 
 namespace EventManager.Application.Services
@@ -23,7 +24,6 @@ namespace EventManager.Application.Services
 
         public async Task RegisterAsync(string login,
                           string password,
-                          UserRole role,
                           CancellationToken cancellationToken)
         {
             var normalizedLogin = login.Trim().ToLowerInvariant();
@@ -39,7 +39,7 @@ namespace EventManager.Application.Services
 
             var user = User.Create(normalizedLogin,
                                    passwordHash,
-                                   role);
+                                   UserRole.User);
 
             await _userRepository.CreateAsync(user, cancellationToken);
         }
@@ -54,7 +54,7 @@ namespace EventManager.Application.Services
 
             if (user == null ||
                !_passwordHasher.VerifyPassword(password, user.PasswordHash))
-                throw new InvalidOperationException("Invalid login or password.");
+                throw new UnauthorizedException();
 
             return _jwtTokenService.GenerateToken(user);
         }

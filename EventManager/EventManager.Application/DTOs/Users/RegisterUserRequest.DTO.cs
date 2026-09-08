@@ -10,6 +10,5 @@ namespace EventManager.Application.DTOs.Users
 
         [Required(ErrorMessage = "Пароль обязателен")]
         public string Password{ get; set; } = null!;
-        public UserRole Role { get; set; } = UserRole.User;
     }
 }

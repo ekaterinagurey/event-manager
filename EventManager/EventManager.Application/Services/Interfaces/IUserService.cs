@@ -6,7 +6,6 @@ namespace EventManager.Application.Services.Interfaces
     {
         Task RegisterAsync(string login,
                            string password,
-                           UserRole role,
                            CancellationToken cancellationToken);
 
         Task<string> LoginAsync(string login,

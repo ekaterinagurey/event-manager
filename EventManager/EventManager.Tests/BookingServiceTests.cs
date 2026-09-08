@@ -70,7 +70,7 @@ namespace EventManager.Tests
         private async Task<User> CreateTestUserAsync()
         {
             var user = User.Create("testuser", "hashed_password", UserRole.User);
-            await _userService.RegisterAsync(user.Login, user.PasswordHash, user.Role, default);
+            await _userService.RegisterAsync(user.Login, user.PasswordHash, default);
             return user;
         }
 
@@ -311,10 +311,10 @@ namespace EventManager.Tests
         {
             // Arrange
             var user1 = User.Create("testuser1", "hashed_password", UserRole.User);
-            await _userService.RegisterAsync(user1.Login, user1.PasswordHash, user1.Role, default);
+            await _userService.RegisterAsync(user1.Login, user1.PasswordHash, default);
 
             var user2 = User.Create("testuser2", "hashed_password", UserRole.User);
-            await _userService.RegisterAsync(user2.Login, user2.PasswordHash, user2.Role, default);
+            await _userService.RegisterAsync(user2.Login, user2.PasswordHash, default);
 
             const int maxActiveBookings = 10;
 
