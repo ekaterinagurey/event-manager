@@ -1,9 +1,12 @@
 ﻿using EventManager.Application.DTOs.Bookings;
 using EventManager.Application.DTOs.Events;
 using EventManager.Application.Mappers;
-using EventManager.Domain.Models;
 using EventManager.Application.Services.Interfaces;
+using EventManager.Domain.Models;
+using EventManager.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EventManager.Controllers
 {
@@ -31,6 +34,7 @@ namespace EventManager.Controllers
             return Ok(await _eventService.GetEventByIdAsync(id));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<EventInfoDTO>> Create([FromBody] CreateEventDTO newEvent)
         {
@@ -40,6 +44,7 @@ namespace EventManager.Controllers
                                    result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id:guid}")]
         public async Task<ActionResult<EventInfoDTO>> UpdateEvent(Guid id, [FromBody] UpdateEventDTO editingEvent)
         {
@@ -47,6 +52,7 @@ namespace EventManager.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:Guid}")]
         public async Task<ActionResult> Delete(Guid id)
         {
@@ -54,12 +60,15 @@ namespace EventManager.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [HttpPost("{id:guid}/book")]
         public async Task<ActionResult<BookingResponseDTO>> Book(Guid id)
         {
-            var booking = await _bookingService.CreateBookingAsync(id);
+            var userId = User.GetUserId();
+
+            var booking = await _bookingService.CreateBookingAsync(id, userId);
             return AcceptedAtAction(nameof(BookingsController.GetById),
                                     "Bookings",
                                     new { id = booking.Id },

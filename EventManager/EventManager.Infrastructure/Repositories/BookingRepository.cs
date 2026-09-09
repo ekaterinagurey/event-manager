@@ -1,7 +1,8 @@
 ﻿using EventManager.Infrastructure.DataAccess;
 using EventManager.Domain.Models;
-using EventManager.Application.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using EventManager.Domain.Enums;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Infrastructure.Repositories
 {
@@ -35,6 +36,14 @@ namespace EventManager.Infrastructure.Repositories
         {
             _context.Bookings.Update(booking);
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<int> CountActiveByUserId(Guid userId, CancellationToken cancellationToken)
+        {
+            return await _context.Bookings.CountAsync(b => b.UserId == userId &&
+                                                    (b.Status == BookingStatus.Pending ||
+                                                     b.Status == BookingStatus.Confirmed),
+                                               cancellationToken);
         }
 
     }

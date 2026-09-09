@@ -1,10 +1,10 @@
 ﻿using EventManager.Infrastructure.DataAccess;
 using EventManager.Domain.Exceptions;
 using EventManager.Domain.Models;
-using EventManager.Application.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Repositories
 {

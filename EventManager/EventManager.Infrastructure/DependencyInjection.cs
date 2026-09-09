@@ -1,11 +1,16 @@
-﻿using EventManager.Application.Repositories.Interfaces;
+﻿using EventManager.Application.Interfaces.Authentication;
+using EventManager.Application.Interfaces.Repositories;
+using EventManager.Infrastructure.Authentication;
 using EventManager.Infrastructure.DataAccess;
 using EventManager.Infrastructure.Repositories;
 using EventManager.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using System.Text;
 
 namespace EventManager.Infrastructure
 {
@@ -40,8 +45,55 @@ namespace EventManager.Infrastructure
                                   }
                 ));
 
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IBookingRepository, BookingRepository>();
+
+            // 6. Аутентификация
+            var jwtSection = configuration.GetSection("Jwt");
+
+            // Получаем секрет из secrets
+            var secret = configuration["JWT_SECRET"];
+
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                throw new InvalidOperationException("JWT Secret не задан");
+            }
+
+            // Регистрация IOptions<JwtOptions> в DI
+            services.Configure<JwtOptions>(options =>
+            {
+                jwtSection.Bind(options);
+                options.Secret = secret!;
+            });
+           
+            // Регистрация аутентификации 
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSection["Issuer"],
+
+                        ValidateAudience = true,
+                        ValidAudience = jwtSection["Audience"],
+
+                        ValidateLifetime = true,
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+                    };
+                });
+
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+
             return services;
         }
 

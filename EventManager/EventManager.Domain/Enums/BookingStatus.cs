@@ -1,9 +1,10 @@
-﻿namespace EventManager.Domain.Models
+﻿namespace EventManager.Domain.Enums
 {
     public enum BookingStatus
     {
         Pending,
         Confirmed,
-        Rejected
+        Rejected,
+        Cancelled
     }
 }

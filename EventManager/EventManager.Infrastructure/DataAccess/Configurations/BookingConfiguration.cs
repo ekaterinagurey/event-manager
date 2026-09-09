@@ -20,6 +20,10 @@ namespace EventManager.Infrastructure.DataAccess.Configurations
             .HasColumnName("event_id")
             .IsRequired();
 
+            builder.Property(b => b.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+
             builder.Property(b => b.Status)
                 .HasColumnName("status")
                 .IsRequired()
@@ -37,6 +41,11 @@ namespace EventManager.Infrastructure.DataAccess.Configurations
                 .WithMany(e => e.Bookings)
                 .HasForeignKey(b => b.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -1,10 +1,11 @@
-﻿using EventManager.Infrastructure.DataAccess;
-using EventManager.IntegrationTests.Infrastructure;
+﻿using EventManager.Application.Services;
+using EventManager.Domain.Enums;
 using EventManager.Domain.Models;
-using EventManager.Repositories;
-using EventManager.Application.Services;
-using Microsoft.EntityFrameworkCore;
+using EventManager.Infrastructure.DataAccess;
 using EventManager.Infrastructure.Repositories;
+using EventManager.IntegrationTests.Infrastructure;
+using EventManager.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.IntegrationTests
 {
@@ -48,6 +49,9 @@ namespace EventManager.IntegrationTests
             // Arrange
             await using var arrangeContext = CreateContext();
 
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            arrangeContext.Users.Add(user);
+
             var newEvent = Event.Create("Test event",
                                         DateTime.UtcNow,
                                         DateTime.UtcNow.AddHours(1),
@@ -56,7 +60,7 @@ namespace EventManager.IntegrationTests
             arrangeContext.Events.Add(newEvent);
             await arrangeContext.SaveChangesAsync();
 
-            var booking = Booking.Create(newEvent.Id);
+            var booking = Booking.Create(newEvent.Id, user.Id);
             await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 
@@ -96,6 +100,9 @@ namespace EventManager.IntegrationTests
             // Arrange
             await using var arrangeContext = CreateContext();
 
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            arrangeContext.Users.Add(user);
+
             var newEvent = Event.Create("Test event",
                                         DateTime.UtcNow,
                                         DateTime.UtcNow.AddHours(1),
@@ -104,7 +111,7 @@ namespace EventManager.IntegrationTests
             arrangeContext.Events.Add(newEvent);
             await arrangeContext.SaveChangesAsync();
 
-            var booking = Booking.Create(newEvent.Id);
+            var booking = Booking.Create(newEvent.Id, user.Id);
             await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 
@@ -129,6 +136,10 @@ namespace EventManager.IntegrationTests
 
             // Arrange
             await using var arrangeContext = CreateContext();
+
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            arrangeContext.Users.Add(user);
+
             var newEvent = Event.Create("Test event",
                                       DateTime.UtcNow,
                                       DateTime.UtcNow.AddHours(1),
@@ -140,7 +151,7 @@ namespace EventManager.IntegrationTests
             // Act
             await using var actContext = CreateContext();
             var repository = new BookingRepository(actContext);
-            var booking = Booking.Create(newEvent.Id);
+            var booking = Booking.Create(newEvent.Id, user.Id);
             await repository.CreateAsync(booking, default);
 
             // Assert
@@ -159,7 +170,7 @@ namespace EventManager.IntegrationTests
             await ResetDatabaseAsync();
 
             // Arrange
-            var booking = Booking.Create(Guid.NewGuid());
+            var booking = Booking.Create(Guid.NewGuid(), Guid.NewGuid());
 
             // Act && Assert
             await using var context = CreateContext();
@@ -175,12 +186,18 @@ namespace EventManager.IntegrationTests
 
             // Arrange
             await using var arrangeContext = CreateContext();
+
             var newEvent = Event.Create("Test event",
-                                      DateTime.UtcNow,
                                       DateTime.UtcNow.AddHours(1),
+                                      DateTime.UtcNow.AddHours(2),
                                       10);
 
             arrangeContext.Events.Add(newEvent);
+            await arrangeContext.SaveChangesAsync();
+
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            arrangeContext.Users.Add(user);
+
             await arrangeContext.SaveChangesAsync();
 
             // Act
@@ -189,7 +206,7 @@ namespace EventManager.IntegrationTests
             var eventRepository = new EventRepository(actContext);
             var bookingService = new BookingService(bookingRepository, eventRepository);
            
-            var booking = await bookingService.CreateBookingAsync(newEvent.Id);
+            var booking = await bookingService.CreateBookingAsync(newEvent.Id, user.Id);
 
             //Assert
             await using var verifyContext = CreateContext();
@@ -208,6 +225,10 @@ namespace EventManager.IntegrationTests
 
             // Arrange
             await using var arrangeContext = CreateContext();
+
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            arrangeContext.Users.Add(user);
+
             var newEvent = Event.Create("Test event",
                                       DateTime.UtcNow,
                                       DateTime.UtcNow.AddHours(1),
@@ -216,7 +237,7 @@ namespace EventManager.IntegrationTests
             arrangeContext.Events.Add(newEvent);
             await arrangeContext.SaveChangesAsync();
 
-            var booking = Booking.Create(newEvent.Id);
+            var booking = Booking.Create(newEvent.Id, user.Id);
             await arrangeContext.Bookings.AddAsync(booking);
             await arrangeContext.SaveChangesAsync();
 

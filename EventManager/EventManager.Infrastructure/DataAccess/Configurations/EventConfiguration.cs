@@ -10,9 +10,9 @@ namespace EventManager.Infrastructure.DataAccess.Configurations
         {
             builder.ToTable("events");
 
-            builder.HasKey(b => b.Id);
+            builder.HasKey(e => e.Id);
 
-            builder.Property(b => b.Id)
+            builder.Property(e => e.Id)
                 .HasColumnName("id")
                 .ValueGeneratedNever();
 
@@ -21,23 +21,23 @@ namespace EventManager.Infrastructure.DataAccess.Configurations
                 .IsRequired()
                 .HasMaxLength(200);
 
-            builder.Property(b => b.Description)
+            builder.Property(e => e.Description)
                 .HasColumnName("description")
                 .HasMaxLength(2000);
 
-            builder.Property(b => b.StartAt)
+            builder.Property(e => e.StartAt)
                 .HasColumnName("start_at")
                 .IsRequired();
 
-            builder.Property(b => b.EndAt)
+            builder.Property(e => e.EndAt)
                 .HasColumnName("end_at")
                 .IsRequired();
 
-            builder.Property(b => b.TotalSeats)
+            builder.Property(e => e.TotalSeats)
                 .HasColumnName("total_seats")
                 .IsRequired();
 
-            builder.Property(b => b.AvailableSeats)
+            builder.Property(e => e.AvailableSeats)
                 .HasColumnName("available_seats")
                 .IsRequired();
 

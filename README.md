@@ -251,6 +251,34 @@ dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationT
 Swagger UI доступен по адресу:
 https://localhost:<port>/swagger
 
+##  Безопасность и аутентификация
+
+В проекте реализована аутентификация на основе **JWT** и ролевая модель доступа к ресурсам API.
+
+---
+
+### 1. Ролевая модель и разграничение прав
+
+В системе предусмотрено две роли: **`User`** (Обычный пользователь) и **`Admin`** (Администратор).
+
+---
+
+### 2. Настройка JWT и безопасность секретного ключа
+
+Конфигурация параметров токена находится в секции `Jwt` файла `appsettings.json`.
+Сам секретный ключ хранится с использованием встроенного инструмента **.NET Secret Manager (`dotnet user-secrets`)**.:
+
+```json
+{
+  "Jwt": {
+    "Issuer": "EventManager",
+    "Audience": "EventManagerClient",
+    "Expires": 15,
+    "Secret": "${JWT_SECRET}"
+  }
+}
+```
+
 # API
 
 ## Events

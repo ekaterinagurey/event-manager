@@ -1,6 +1,7 @@
-﻿using EventManager.Infrastructure.DataAccess;
-using EventManager.IntegrationTests.Infrastructure;
+﻿using EventManager.Domain.Enums;
 using EventManager.Domain.Models;
+using EventManager.Infrastructure.DataAccess;
+using EventManager.IntegrationTests.Infrastructure;
 using EventManager.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -326,6 +327,9 @@ namespace EventManager.IntegrationTests
             // Arrange
             await using var context = CreateContext();
 
+            var user = User.Create("testuser", "hashed_password", UserRole.User);
+            context.Users.Add(user);
+
             var newEvent = Event.Create("Удаляемое",
                                         DateTime.UtcNow,
                                         DateTime.UtcNow.AddHours(1),
@@ -334,7 +338,7 @@ namespace EventManager.IntegrationTests
             context.Events.Add(newEvent);
             await context.SaveChangesAsync();
 
-            var booking = Booking.Create(newEvent.Id);
+            var booking = Booking.Create(newEvent.Id, user.Id);
             await context.Bookings.AddAsync(booking);
             await context.SaveChangesAsync();
 
@@ -349,9 +353,11 @@ namespace EventManager.IntegrationTests
             await using var verifyContext = CreateContext();
             var deletedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Id == newEvent.Id);
             var deletedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.Id == booking.Id);
+            var remainingUser = await verifyContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
 
             Assert.Null(deletedEvent);
             Assert.Null(deletedBooking);
+            Assert.NotNull(remainingUser);
         }
         #endregion
 

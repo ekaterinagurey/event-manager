@@ -1,9 +1,10 @@
 ﻿using EventManager.Domain.Exceptions;
 using EventManager.Domain.Models;
-using EventManager.Application.Repositories.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using EventManager.Domain.Enums;
+using EventManager.Application.Interfaces.Repositories;
 
 namespace EventManager.Application.BackgroundServices
 {

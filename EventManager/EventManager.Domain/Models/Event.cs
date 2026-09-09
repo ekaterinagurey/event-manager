@@ -93,5 +93,10 @@ namespace EventManager.Domain.Models
             if (AvailableSeats > TotalSeats)
                 AvailableSeats = TotalSeats;
         }
+
+        public bool HasStarted()
+        {
+            return StartAt <= DateTime.UtcNow;
+        }
     }
 }
