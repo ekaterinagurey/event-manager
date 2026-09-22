@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventManager.Events.Domain\EventManager.Events.Domain.csproj" />
+    <ProjectReference Include="..\EventManager.Shared.Contracts\EventManager.Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

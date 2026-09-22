@@ -49,6 +49,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManager.Events.Present
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prev_ver_monolith", "prev_ver_monolith", "{289BF65B-8CD4-4B83-A37D-4BF579B397C2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{3CCF735C-DB2E-496B-96A7-0AC0239ECCDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManager.Shared.Contracts", "EventManager.Shared.Contracts\EventManager.Shared.Contracts.csproj", "{70A39B88-2F56-47EE-BB3F-7A6957D9260D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -131,6 +135,10 @@ Global
 		{42F153D6-0239-4752-91E6-8B8395B1B8AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42F153D6-0239-4752-91E6-8B8395B1B8AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42F153D6-0239-4752-91E6-8B8395B1B8AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70A39B88-2F56-47EE-BB3F-7A6957D9260D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70A39B88-2F56-47EE-BB3F-7A6957D9260D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70A39B88-2F56-47EE-BB3F-7A6957D9260D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70A39B88-2F56-47EE-BB3F-7A6957D9260D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -155,6 +163,7 @@ Global
 		{12D02EF6-C2BE-4EB6-BA52-E67D97CCD1B6} = {EAC0ECC2-40EE-481C-B9E7-405C3BD7A3CD}
 		{068570D3-6489-421E-97DB-1CB95A2450AA} = {EAC0ECC2-40EE-481C-B9E7-405C3BD7A3CD}
 		{42F153D6-0239-4752-91E6-8B8395B1B8AB} = {F4E03B99-5E63-4BED-85ED-1717C3300663}
+		{70A39B88-2F56-47EE-BB3F-7A6957D9260D} = {3CCF735C-DB2E-496B-96A7-0AC0239ECCDF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AB33BF37-C7D4-4B33-BD9D-5707019ED4BA}
