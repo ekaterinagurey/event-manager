@@ -1,19 +1,19 @@
-# PostgreSQL для EventApi — совпадает с ConnectionStrings:DefaultConnection в appsettings.json
+# PostgreSQL для EventApi, для BookingApi, UserApi — совпадает с ConnectionStrings:DefaultConnection в appsettings.json
 # Запуск из корня репозитория: docker compose up -d
 # Остановка: docker compose down
-# Данные сохраняются в именованном томе eventapi_pgdata
+# Данные сохраняются в именованных томах:  eventapi_pgdata, userapi_pgdata, bookingapi_pgdata
 
 services:
-  postgres:
+  eventapi-postgres:
     image: postgres:16-alpine
     container_name: eventapi-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${EVENT_DB_PASSWORD}
       POSTGRES_DB: eventapi
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - eventapi_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -22,5 +22,43 @@ services:
       timeout: 5s
       retries: 5
 
+  userapi-postgres:
+    image: postgres:16-alpine
+    container_name: userapi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+      POSTGRES_DB: userapi
+    ports:
+      - "5433:5432"
+    volumes:
+      - userapi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bookingapi-postgres:
+    image: postgres:16-alpine
+    container_name: bookingapi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD}
+      POSTGRES_DB: bookingapi
+    ports:
+      - "5434:5432"
+    volumes:
+      - bookingapi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   eventapi_pgdata:
+  userapi_pgdata:
+  bookingapi_pgdata:

@@ -156,10 +156,12 @@ POSTGRES_PASSWORD=your_secure_password
 
 ## Создание миграции
 
-Для создания новой миграции выполните:
+Для создания новой миграции выполните  в корне решения (там, где лежит файл .sln) :
 
 ```bash
-dotnet ef migrations add InitialCreate
+dotnet ef migrations add InitialCreate --project EventManager.Users.Infrastructure --startup-project EventManager.Users.Presentation --output-dir Migrations
+dotnet ef migrations add InitialCreate --project EventManager.Events.Infrastructure --startup-project EventManager.Events.Presentation --output-dir Migrations
+dotnet ef migrations add InitialCreate --project EventManager.Bookings.Infrastructure --startup-project EventManager.Bookings.Presentation --output-dir Migrations
 ```
 
 где `InitialCreate` — имя миграции.
