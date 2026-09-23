@@ -1,6 +1,7 @@
 ﻿using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Domain.Repositories;
 using EventManager.Events.Infrastructure.Authentication;
+using EventManager.Events.Infrastructure.Messaging;
 using EventManager.Events.Infrastructure.Repositories;
 using EventManager.Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,6 +43,8 @@ namespace EventManager.Events.Infrastructure
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddHostedService<TopicInitializer>();
+            services.AddHostedService<BookingConfirmedConsumer>();
 
             var jwtSection = configuration.GetSection("Jwt");
 

@@ -4,6 +4,7 @@ using EventManager.Events.Application.Mappers;
 using EventManager.Events.Domain.Entities;
 using EventManager.Events.Domain.Exceptions;
 using EventManager.Events.Domain.Repositories;
+using System.Threading;
 
 namespace EventManager.Events.Application.Services
 {
@@ -79,6 +80,21 @@ namespace EventManager.Events.Application.Services
             ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
             await _eventRepository.DeleteAsync(existingEvent, cancellationToken);
+            return true;
+        }
+
+        public async Task<bool> DecreaseAvailableSeatsAsync(Guid eventId, 
+                                                            int seatsCount,
+                                                            CancellationToken cancellationToken = default)
+        {
+            var existingEvent = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
+            if (existingEvent is null)
+                return false;
+
+            if (!existingEvent.TryReserveSeats(seatsCount))
+                return false;
+
+            await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
             return true;
         }
     }
