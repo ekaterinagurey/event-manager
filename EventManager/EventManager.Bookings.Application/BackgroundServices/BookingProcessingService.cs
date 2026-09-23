@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using EventManager.Bookings.Application.Interfaces;
 using EventManager.Bookings.Domain.Entities;
-using EventManager.Bookings.Domain.Repositories;
 using EventManager.Bookings.Domain.Enums;
+using EventManager.Bookings.Domain.Repositories;
+using EventManager.Shared.Contracts.Events;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace EventManager.Bookings.Application.BackgroundServices
 {
@@ -13,12 +16,15 @@ namespace EventManager.Bookings.Application.BackgroundServices
         private static readonly TimeSpan ProcessingDelay = TimeSpan.FromSeconds(2);
 
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IEventPublisher _eventPublisher;
         private readonly ILogger<BookingProcessingService> _logger;
 
         public BookingProcessingService(IServiceScopeFactory scopeFactory,
+                                        IEventPublisher eventPublisher,
                                         ILogger<BookingProcessingService> logger)
         {
             _scopeFactory = scopeFactory;
+            _eventPublisher = eventPublisher;
             _logger = logger;
         }
 
@@ -82,6 +88,15 @@ namespace EventManager.Bookings.Application.BackgroundServices
                 await bookingRepository.UpdateAsync(booking, stoppingToken);
 
                 _logger.LogInformation($"Booking {booking.Id} confirmed.");
+
+                // Публикация события о бронировании для сервиса Event
+                var confirmedEvent = new BookingConfirmedEvent(booking.Id,
+                                                               booking.EventId,
+                                                               booking.UserId,
+                                                               1,
+                                                               DateTime.UtcNow);
+
+                await _eventPublisher.PublishBookingConfirmedAsync(confirmedEvent, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -93,8 +108,7 @@ namespace EventManager.Bookings.Application.BackgroundServices
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-                   // var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-
+                   
                     var booking = await bookingRepository.GetByIdAsync(bookingId, stoppingToken);
 
                     if (booking != null)

@@ -1,6 +1,7 @@
 ﻿using EventManager.Bookings.Application.Interfaces;
 using EventManager.Bookings.Domain.Repositories;
 using EventManager.Bookings.Infrastructure.Authentication;
+using EventManager.Bookings.Infrastructure.Messaging;
 using EventManager.Bookings.Infrastructure.Repositories;
 using EventManager.Infrastructure.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,10 +40,10 @@ namespace EventManager.Bookings.Infrastructure
                                   }
                 ));
 
-            services.AddScoped<IBookingRepository, BookingRepository>();
-
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddSingleton<IEventPublisher, EventPublisher>();
+            services.AddScoped<IBookingRepository, BookingRepository>();
 
             var jwtSection = configuration.GetSection("Jwt");
 
