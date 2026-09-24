@@ -45,6 +45,7 @@ namespace EventManager.Events.Infrastructure
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddHostedService<TopicInitializer>();
             services.AddHostedService<BookingConfirmedConsumer>();
+            services.AddHostedService<BookingCancelledConsumer>();
 
             var jwtSection = configuration.GetSection("Jwt");
 
@@ -56,11 +57,11 @@ namespace EventManager.Events.Infrastructure
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,//true,
-                        //ValidIssuer = jwtSection["Issuer"],
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSection["Issuer"],
 
-                        ValidateAudience = false, //true,
-                        //ValidAudience = jwtSection["Audience"],
+                        ValidateAudience = true,
+                        ValidAudience = jwtSection["Audience"],
 
                         ValidateLifetime = true,
 

@@ -56,6 +56,19 @@ namespace EventManager.Bookings.Infrastructure.Messaging
             }
         }
 
+        public async Task PublishBookingCancelledAsync(BookingCancelledEvent currentEvent,
+                                                       CancellationToken cancellationToken = default)
+        {
+            var key = currentEvent.EventId.ToString();
+            var payload = JsonSerializer.Serialize(currentEvent);
+
+            await _producer.ProduceAsync(KafkaTopics.BookingCancelled,
+                                         new Message<string, string> { Key = key, Value = payload },
+                                         cancellationToken);
+
+            _logger.LogInformation($"Опубликовано событие BookingCancelled для BookingId={currentEvent.BookingId}");
+        }
+
         public void Dispose()
         {
             try

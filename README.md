@@ -1,106 +1,51 @@
-﻿# Event Manager API
+﻿# Event Manager
 
 REST API для управления мероприятиями
 
-# Архитектура проекта
+# Архитектура системы
 
-Проект построен с разделением на слои
+Система состоит из трёх независимых сервисов, брокера сообщений и отдельных баз данных PostgreSQL для каждого сервиса.
 
-```text
-EventManager/
-│
-├── EventManager.Domain/
-│   ├── Models/
-│   └── Exceptions/
-│
-├── EventManager.Application/
-│   ├── DTOs/
-│   │   ├── Bookings/
-│   │   └── Events/
-│   ├── Repositories/
-│   │   └── Interfaces/
-│   ├── Services/
-│   │   └── Interfaces/
-│   └── Mappers/
-│
-├── EventManager.Infrastructure/
-│   ├── DataAccess/
-│   │   ├── AppDbContext.cs
-│   │   └── Configurations/
-│   ├── Repositories/
-│   ├── Migrations/
-│   └── DependencyInjection.cs
-│
-├── EventManager/
-│   ├── Controllers/
-│   ├── Middleware/
-│   └── Program.cs
-│
-├── EventManager.IntegrationTests/
-└── EventManager.Tests/
-```
+## Сервис  **Users Service**
+Аутентификация, регистрация пользователей и генерация JWT-токенов
+PostgreSQL (`users_db`) 
 
-## Domain
+## Сервис  **Events Service**
+Управление событиями
+PostgreSQL (`events_db`) 
 
-Слой **Domain** содержит доменные сущности и не зависит от внешних фреймворков.
+## Сервис  **Bookings Service**
+Создание бронирований на события
+PostgreSQL (`bookings_db`) 
 
-### В этом слое находятся:
-- сущности `Event` и `Booking`;
-- перечисление `BookingStatus`;
-- бизнес-правила сущностей;
-- доменные исключения.
+## Брокер сообщений Kafka
+Брокер сообщений для интеграционных событий между сервисом событий и сервисом бронирования
 
----
 
-## Application
+**Аутентификация:** 
+Все сервисы используют симметричную валидацию **JWT Bearer**-токенов, выпущенных `Users Service`. 
+Общий секретный ключ и параметры валидации передаются через переменные окружения.
 
-Слой **Application** содержит бизнес-сценарии приложения и определяет необходимые для них абстракции.
 
-### В этом слое находятся:
-- интерфейсы сервисов;
-- реализации сервисов;
-- DTO;
-- интерфейсы репозиториев;
+# Поток данных: BookingConfirmed
 
-**Важно:** `Application` не зависит от `Infrastructure`.
+Взаимодействие между сервисами бронирований и событий:
 
----
+[Клиент]
+    1. POST /bookings
 
-## Infrastructure
+[Bookings Service]
+    2. Сохраняет бронь (Status = Pending)
 
-Слой **Infrastructure** содержит реализации, зависящие от внешних технологий.
+[BookingProcessingService (BookingProcessingService)]
+    3. Переводит бронь в Confirmed
+    4. Публикует событие в брокере сообщений
 
-### В этом слое находятся:
-- `AppDbContext`;
-- конфигурации сущностей EF Core;
-- реализации репозиториев;
-- PostgreSQL;
-- EF Core migrations;
+[Kafka Topic: booking-confirmed]
+    5. Читает событие (Consumer Group: events-service-group)
+[Events Service (BookingConfirmedConsumer)]
+    6. Уменьшает счётчик свободных мест на событии
 
----
-
-## Presentation
-
-**Presentation** (проект EventManager) отвечает за взаимодействие с клиентом по HTTP.
-
-### В этом слое находятся:
-- контроллеры;
-- глобальный обработчик исключений;
-- `Program.cs`;
-- Регистрация зависимостей через DI.
-
-Контроллеры не содержат бизнес-логики и не работают напрямую с `DbContext` или репозиториями. Они вызывают Application-сервисы и возвращают HTTP-ответ.
-
----
-
-## Регистрация зависимостей
-
-Для сохранения `Program.cs` компактным, слой **Infrastructure:** предоставляет extension-методы для регистрации зависимостей.
-
-```csharp
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
-```
 
 # Запуск проекта
 

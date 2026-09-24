@@ -55,10 +55,6 @@ namespace EventManager.Events.Infrastructure.Messaging
                 try
                 {
                     var consumeResult = consumer.Consume(stoppingToken);
-
-                    if (consumeResult?.Message?.Value is null)
-                        continue;
-
                     ProcessMessage(consumer, consumeResult, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

@@ -97,5 +97,19 @@ namespace EventManager.Events.Application.Services
             await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
             return true;
         }
+
+        public async Task<bool> ReleaseSeatsAsync(Guid eventId,
+                                                  int seatsCount, 
+                                                  CancellationToken cancellationToken = default)
+        {
+            var existingEvent = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
+            if (existingEvent is null)
+                return false;
+
+            existingEvent.ReleaseSeats(seatsCount);
+
+            await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+            return true;
+        }
     }
 }

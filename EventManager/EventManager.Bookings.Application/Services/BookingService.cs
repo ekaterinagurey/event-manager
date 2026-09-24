@@ -2,7 +2,7 @@
 using EventManager.Bookings.Domain.Entities;
 using EventManager.Bookings.Domain.Exceptions;
 using EventManager.Bookings.Domain.Repositories;
-using Microsoft.Extensions.Logging;
+using EventManager.Shared.Contracts.Events;
 
 namespace EventManager.Bookings.Application.Services
 {
@@ -11,17 +11,17 @@ namespace EventManager.Bookings.Application.Services
         private readonly SemaphoreSlim BookingLock = new(1, 1);
         private readonly IBookingRepository _bookingRepository;
         private readonly ICurrentUserService _currentUserService;
-      //  private readonly IEventRepository _eventRepository;
+        private readonly IEventPublisher _eventPublisher;
         private const int MaxActiveBookings = 10;
 
         public BookingService(IBookingRepository bookingRepository,
-                              ICurrentUserService currentUserService
-                             /* IEventRepository eventRepository*/)
+                              ICurrentUserService currentUserService,
+                              IEventPublisher eventPublisher)
         {
             _bookingRepository = bookingRepository;
             _currentUserService = currentUserService;
-            // _eventRepository = eventRepository;
-        }
+            _eventPublisher = eventPublisher;
+        }   
 
         public async Task<Booking> CreateBookingAsync(Guid eventId,
                                                       Guid userId,
@@ -30,23 +30,10 @@ namespace EventManager.Bookings.Application.Services
             await BookingLock.WaitAsync(cancellationToken);
             try
             {
-                //var existingEvent = await _eventRepository.GetByIdAsync(eventId, cancellationToken)
-                              //   ?? throw new NotFoundException("Event not found");
-
-              //  if (!existingEvent.TryReserveSeats())
-               // {
-                 //   throw new NoAvailableSeatsException();
-              //  }
-
-               // if (existingEvent.HasStarted())
-                   // throw new PastEventBookingException();
-
                 var activeBookingsCount = await _bookingRepository.CountActiveByUserId(userId, cancellationToken);
 
                 if (activeBookingsCount >= MaxActiveBookings)
                     throw new BookingLimitExceededException();
-
-              //  await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
 
                 var booking = Booking.Create(eventId, userId);
                 await _bookingRepository.CreateAsync(booking, cancellationToken);
@@ -71,8 +58,6 @@ namespace EventManager.Bookings.Application.Services
         }
 
         public async Task CancelBookingAsync(Guid bookingId,
-                                             // Guid userId,
-                                             // UserRole userRole,
                                              CancellationToken cancellationToken)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken)
@@ -87,19 +72,18 @@ namespace EventManager.Bookings.Application.Services
                 throw new AccessDeniedException("У вас нет прав на отмену этой брони.");
             }
 
-            /*if (userRole != UserRole.Admin &&
-                booking.UserId != userId)
-                throw new AccessDeniedException();*/
-
-            //var existingEvent = await _eventRepository.GetByIdAsync(booking.EventId, cancellationToken)
-                // ?? throw new NotFoundException("Event not found");
-
-           // if (existingEvent.StartAt <= DateTime.UtcNow)
-               // throw new EventAlreadyStartedException(existingEvent.Id);
-
             booking.Cancel();
 
             await _bookingRepository.UpdateAsync(booking, cancellationToken);
+
+            // Публикуем событие для Events Service
+            var cancelledEvent = new BookingCancelledEvent(booking.Id,
+                                                           booking.EventId,
+                                                           booking.UserId,
+                                                           1,
+                                                           DateTime.UtcNow);
+
+            await _eventPublisher.PublishBookingCancelledAsync(cancelledEvent, cancellationToken);
         }
     }
 }

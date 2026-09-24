@@ -28,9 +28,11 @@ namespace EventManager.Events.Infrastructure.Messaging
                 using var adminClient = new AdminClientBuilder(adminConfig).Build();
 
                 var metadata = adminClient.GetMetadata(TimeSpan.FromSeconds(5));
-                var topicExists = metadata.Topics.Any(t => t.Topic == KafkaTopics.BookingConfirmed);
 
-                if (!topicExists)
+                var topicBookingConfirmedExists = metadata.Topics.
+                    Any(t => t.Topic == KafkaTopics.BookingConfirmed);
+
+                if (!topicBookingConfirmedExists)
                 {
                     _logger.LogInformation($"Топик '{KafkaTopics.BookingConfirmed}' не найден.");
 
@@ -44,11 +46,24 @@ namespace EventManager.Events.Infrastructure.Messaging
                     await adminClient.CreateTopicsAsync(new[] { topicSpecification });
                     _logger.LogInformation($"Топик '{KafkaTopics.BookingConfirmed}' успешно создан.");
                 }
-            }
-            catch (CreateTopicsException ex) 
-            when (ex.Results.Any(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
-            {
-                _logger.LogInformation($"Топик '{KafkaTopics.BookingConfirmed}' уже существует.");
+
+                var topicBookingCancelledExists = metadata.Topics.
+                    Any(t => t.Topic == KafkaTopics.BookingCancelled);
+
+                if (!topicBookingCancelledExists)
+                {
+                    _logger.LogInformation($"Топик '{KafkaTopics.BookingCancelled}' не найден.");
+
+                    var topicSpecification = new TopicSpecification
+                    {
+                        Name = KafkaTopics.BookingCancelled,
+                        NumPartitions = 3,
+                        ReplicationFactor = 1
+                    };
+
+                    await adminClient.CreateTopicsAsync(new[] { topicSpecification });
+                    _logger.LogInformation($"Топик '{KafkaTopics.BookingCancelled}' успешно создан.");
+                }
             }
             catch (Exception ex)
             {

@@ -39,6 +39,7 @@ namespace EventManager.Bookings.Presentation.Controllers
             return Ok(booking);
         }
 
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(typeof(BookingResponseDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

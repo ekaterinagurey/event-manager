@@ -55,11 +55,11 @@ namespace EventManager.Bookings.Infrastructure
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,//true,
-                        //ValidIssuer = jwtSection["Issuer"],
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSection["Issuer"],
 
-                        ValidateAudience = false, //true,
-                        //ValidAudience = jwtSection["Audience"],
+                        ValidateAudience = true,
+                        ValidAudience = jwtSection["Audience"],
 
                         ValidateLifetime = true,
 

@@ -6,7 +6,6 @@ using EventManager.Shared.Contracts.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 
 namespace EventManager.Bookings.Application.BackgroundServices
 {
@@ -73,17 +72,6 @@ namespace EventManager.Bookings.Application.BackgroundServices
                 if (booking == null || booking.Status != BookingStatus.Pending)
                     return;
 
-                /* var currentEvent = await eventRepository.GetByIdAsync(booking.EventId, stoppingToken);
-
-                 if (currentEvent == null)
-                 {
-                     booking.Reject();
-                     await bookingRepository.UpdateAsync(booking, stoppingToken);
-
-                     _logger.LogWarning("Booking {BookingId} rejected", booking.Id);
-                     return;
-                 }*/
-
                 booking.Confirm();
                 await bookingRepository.UpdateAsync(booking, stoppingToken);
 
@@ -115,14 +103,6 @@ namespace EventManager.Bookings.Application.BackgroundServices
                     {
                         booking.Reject();
                         await bookingRepository.UpdateAsync(booking, stoppingToken);
-
-                        /* var currentEvent = await eventRepository.GetByIdAsync(booking.EventId, stoppingToken);
-
-                         if (currentEvent != null)
-                         {
-                             currentEvent.ReleaseSeats();
-                             await eventRepository.UpdateAsync(currentEvent, stoppingToken);
-                         }*/
 
                         _logger.LogError(ex, $"Booking {bookingId} rejected due to processing error");
                     }
