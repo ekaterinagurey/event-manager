@@ -111,11 +111,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=userapi-postgres;Port=5432;Database=userapi;Username=postgres;Password=postgres
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
-      - Jwt__Issuer=${JWT_ISSUER:-EventManager}
-      - Jwt__Audience=${JWT_AUDIENCE:-EventManager}
 
     # ==========================================
-    # Evemt Service (Порт 5002)
+    # Event Service (Порт 5002)
     # ==========================================
   events-service:
     build:
@@ -127,12 +125,8 @@ services:
       - "5002:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=eventapi-postgres;Port=5432;Database=eventapi;Username=postgres;Password=${EVENT_DB_PASSWORD:-postgres}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
-      - Jwt__Issuer=${JWT_ISSUER:-EventManager}
-      - Jwt__Audience=${JWT_AUDIENCE:-EventManager}
     depends_on:
       eventapi-postgres:
         condition: service_healthy
@@ -147,12 +141,8 @@ services:
       - "5003:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=bookingapi-postgres;Port=5432;Database=bookingapi;Username=postgres;Password=${BOOKING_DB_PASSWORD:-postgres}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
-      - Jwt__Issuer=${JWT_ISSUER:-EventManager}
-      - Jwt__Audience=${JWT_AUDIENCE:-EventManager}
     depends_on:
       bookingapi-postgres:
         condition: service_healthy
