@@ -127,49 +127,6 @@ dotnet ef database update
 context.Database.Migrate();
 ```
 
-> Для выполнения команд `dotnet ef` может потребоваться установить инструмент Entity Framework Core CLI:
-
-```bash
-dotnet tool install --global dotnet-ef
-```
----
-
-### Unit-тесты
-Для юнит-тестов используется **Entity Framework Core InMemory Database**. Тесты не требуют подключения к PostgreSQL.
-
-Для каждого теста используется отдельное имя InMemory-базы:
-
-```csharp
-var dbName = Guid.NewGuid().ToString();
-
-services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase(dbName));
-```
-
-Это позволяет изолировать данные разных тестов и выполнять тесты независимо от состояния реальной базы данных
-
-### Интеграционные тесты
-
-Для проверки работы репозиториев с реальным PostgreSQL используются интеграционные тесты на базе **Testcontainers**.
-
-При запуске интеграционных тестов автоматически создаётся контейнер PostgreSQL, в котором выполняются тесты репозиториев.
-
-Для запуска интеграционных тестов необходимо:
-
-1. Установить **Docker**.
-2. Убедиться, что Docker Engine запущен.
-3. Выполнить:
-
-```bash
-dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
-```
-
-Testcontainers самостоятельно создаёт и запускает PostgreSQL-контейнер на время выполнения тестов.
-
-## Собрать проект
-```bash
-dotnet build EventManager\EventManager\EventManager.csproj -c Debug 
-```
 
 ## Запустить приложение
 ```bash

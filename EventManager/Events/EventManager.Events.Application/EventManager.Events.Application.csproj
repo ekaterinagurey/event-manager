@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventManager.Bookings.Domain\EventManager.Bookings.Domain.csproj" />
-    <ProjectReference Include="..\EventManager.Shared.Contracts\EventManager.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\EventManager.Events.Domain\EventManager.Events.Domain.csproj" />
+    <ProjectReference Include="..\..\EventManager.Shared.Contracts\EventManager.Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
