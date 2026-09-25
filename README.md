@@ -47,39 +47,57 @@ PostgreSQL (`bookings_db`)
     6. Уменьшает счётчик свободных мест на событии
 
 
-# Запуск проекта
+# Инструкция по запуску
 
-## Настройка базы данных
+ Предварительные требования
 
-Для запуска приложения требуется **PostgreSQL**.
+ **Docker Desktop**
 
-### Настройка строки подключения
+## Шаг 1. Переход в рабочую директорию
 
-Перед запуском приложения необходимо указать строку подключения к PostgreSQL в конфигурации приложения.
+Перейдите в каталог с файлом `docker-compose.yml`
 
-В `appsettings.json`:
+## Шаг 2. Конфигурация переменных окружения (`.env`)
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=${POSTGRES_PASSWORD}"
-  }
-}
+Создайте в папке `EventManager` файл `.env`:
+
+```env
+# Пароли к базам данных
+USER_DB_PASSWORD=enter_your_pass
+EVENT_DB_PASSWORD=enter_your_pass
+BOOKING_DB_PASSWORD=enter_your_pass
+
+# Конфигурация JWT токенов
+JWT_SECRET=super_secret_jwt_key_that_is_long_enough_32_bytes
 ```
 
-### Конфигурация и управление секретами
+## Шаг 3. Сборка и запуск контейнеров
 
-Приложение запускается локально (через IDE или dotnet run), 
-а база данных запускается через Docker Compose. 
+Запустите сборку всех образов и фоновый старт контейнеров:
 
-#### Запуск базы данных
-При запуске базы данных через Docker Compose пароль к PostgreSQL передаётся через переменные окружения файла `.env`.
+```powershell
+docker compose up -d --build
+```
 
-**Создайте файл `.env`** в корне репозитория (рядом с `docker-compose.yml`) на основе шаблона .env.example.
-Пример:
-POSTGRES_PASSWORD=your_secure_password
+## Шаг 4. Проверка статуса
 
-#### Локальный запуск приложения через IDE
+Убедитесь, что все контейнеры работают и прошли healthcheck:
+
+```powershell
+docker compose ps
+```
+
+
+# Доступ к интерфейсам и Swagger UI
+
+После запуска интерфейсы Swagger UI и эндпоинты доступны по следующим адресам:
+
+* **Users API Swagger:** http://localhost:5001/swagger
+* **Events API Swagger:** http://localhost:5002/swagger
+* **Bookings API Swagger:** http://localhost:5003/swagger
+
+---
+# Локальный запуск приложения через IDE
 При локальном запуске приложения через IDE или через терминал (`dotnet run`) пароль к PostgreSQL хранится с 
 использованием встроенного инструмента **.NET Secret Manager (`dotnet user-secrets`)**.
 
@@ -127,33 +145,6 @@ dotnet ef database update
 context.Database.Migrate();
 ```
 
-
-## Запустить приложение
-```bash
-dotnet run --project EventManager\EventManager\EventManager.csproj 
-```
-
-## После запуска приложение будет доступно по адресу:
-http://localhost:<port>
-
-# Запуск тестов
-
-Для запуска Unit-тестов выполните:
-
-```bash
-dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
-```
-
-Для запуска интеграционных тестов выполните:
-
-```bash
-dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
-```
-
-# Swagger
-
-Swagger UI доступен по адресу:
-https://localhost:<port>/swagger
 
 ##  Безопасность и аутентификация
 
