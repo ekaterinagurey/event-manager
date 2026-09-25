@@ -1,140 +1,103 @@
-﻿# Event Manager API
+﻿# Event Manager
 
 REST API для управления мероприятиями
 
-# Архитектура проекта
+# Архитектура системы
 
-Проект построен с разделением на слои
+Система состоит из трёх независимых сервисов, брокера сообщений и отдельных баз данных PostgreSQL для каждого сервиса.
 
-```text
-EventManager/
-│
-├── EventManager.Domain/
-│   ├── Models/
-│   └── Exceptions/
-│
-├── EventManager.Application/
-│   ├── DTOs/
-│   │   ├── Bookings/
-│   │   └── Events/
-│   ├── Repositories/
-│   │   └── Interfaces/
-│   ├── Services/
-│   │   └── Interfaces/
-│   └── Mappers/
-│
-├── EventManager.Infrastructure/
-│   ├── DataAccess/
-│   │   ├── AppDbContext.cs
-│   │   └── Configurations/
-│   ├── Repositories/
-│   ├── Migrations/
-│   └── DependencyInjection.cs
-│
-├── EventManager/
-│   ├── Controllers/
-│   ├── Middleware/
-│   └── Program.cs
-│
-├── EventManager.IntegrationTests/
-└── EventManager.Tests/
+## Сервис  **Users Service**
+Аутентификация, регистрация пользователей и генерация JWT-токенов
+PostgreSQL (`users_db`) 
+
+## Сервис  **Events Service**
+Управление событиями
+PostgreSQL (`events_db`) 
+
+## Сервис  **Bookings Service**
+Создание бронирований на события
+PostgreSQL (`bookings_db`) 
+
+## Брокер сообщений Kafka
+Брокер сообщений для интеграционных событий между сервисом событий и сервисом бронирования
+
+
+**Аутентификация:** 
+Все сервисы используют симметричную валидацию **JWT Bearer**-токенов, выпущенных `Users Service`. 
+Общий секретный ключ и параметры валидации передаются через переменные окружения.
+
+
+# Поток данных: BookingConfirmed
+
+Взаимодействие между сервисами бронирований и событий:
+
+[Клиент]
+    1. POST /bookings
+
+[Bookings Service]
+    2. Сохраняет бронь (Status = Pending)
+
+[BookingProcessingService (BookingProcessingService)]
+    3. Переводит бронь в Confirmed
+    4. Публикует событие в брокере сообщений
+
+[Kafka Topic: booking-confirmed]
+    5. Читает событие (Consumer Group: events-service-group)
+[Events Service (BookingConfirmedConsumer)]
+    6. Уменьшает счётчик свободных мест на событии
+
+
+# Инструкция по запуску
+
+ Предварительные требования
+
+ **Docker Desktop**
+
+## Шаг 1. Переход в рабочую директорию
+
+Перейдите в каталог с файлом `docker-compose.yml`
+
+## Шаг 2. Конфигурация переменных окружения (`.env`)
+
+Создайте в папке `EventManager` файл `.env`:
+
+```env
+# Пароли к базам данных
+USER_DB_PASSWORD=enter_your_pass
+EVENT_DB_PASSWORD=enter_your_pass
+BOOKING_DB_PASSWORD=enter_your_pass
+
+# Конфигурация JWT токенов
+JWT_SECRET=super_secret_jwt_key_that_is_long_enough_32_bytes
 ```
 
-## Domain
+## Шаг 3. Сборка и запуск контейнеров
 
-Слой **Domain** содержит доменные сущности и не зависит от внешних фреймворков.
+Запустите сборку всех образов и фоновый старт контейнеров:
 
-### В этом слое находятся:
-- сущности `Event` и `Booking`;
-- перечисление `BookingStatus`;
-- бизнес-правила сущностей;
-- доменные исключения.
-
----
-
-## Application
-
-Слой **Application** содержит бизнес-сценарии приложения и определяет необходимые для них абстракции.
-
-### В этом слое находятся:
-- интерфейсы сервисов;
-- реализации сервисов;
-- DTO;
-- интерфейсы репозиториев;
-
-**Важно:** `Application` не зависит от `Infrastructure`.
-
----
-
-## Infrastructure
-
-Слой **Infrastructure** содержит реализации, зависящие от внешних технологий.
-
-### В этом слое находятся:
-- `AppDbContext`;
-- конфигурации сущностей EF Core;
-- реализации репозиториев;
-- PostgreSQL;
-- EF Core migrations;
-
----
-
-## Presentation
-
-**Presentation** (проект EventManager) отвечает за взаимодействие с клиентом по HTTP.
-
-### В этом слое находятся:
-- контроллеры;
-- глобальный обработчик исключений;
-- `Program.cs`;
-- Регистрация зависимостей через DI.
-
-Контроллеры не содержат бизнес-логики и не работают напрямую с `DbContext` или репозиториями. Они вызывают Application-сервисы и возвращают HTTP-ответ.
-
----
-
-## Регистрация зависимостей
-
-Для сохранения `Program.cs` компактным, слой **Infrastructure:** предоставляет extension-методы для регистрации зависимостей.
-
-```csharp
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+```powershell
+docker compose up -d --build
 ```
 
-# Запуск проекта
+## Шаг 4. Проверка статуса
 
-## Настройка базы данных
+Убедитесь, что все контейнеры работают и прошли healthcheck:
 
-Для запуска приложения требуется **PostgreSQL**.
-
-### Настройка строки подключения
-
-Перед запуском приложения необходимо указать строку подключения к PostgreSQL в конфигурации приложения.
-
-В `appsettings.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=${POSTGRES_PASSWORD}"
-  }
-}
+```powershell
+docker compose ps
 ```
 
-### Конфигурация и управление секретами
 
-Приложение запускается локально (через IDE или dotnet run), 
-а база данных запускается через Docker Compose. 
+# Доступ к интерфейсам и Swagger UI
 
-#### Запуск базы данных
-При запуске базы данных через Docker Compose пароль к PostgreSQL передаётся через переменные окружения файла `.env`.
+После запуска интерфейсы Swagger UI и эндпоинты доступны по следующим адресам:
 
-**Создайте файл `.env`** в корне репозитория (рядом с `docker-compose.yml`) на основе шаблона .env.example.
-Пример:
-POSTGRES_PASSWORD=your_secure_password
+* **Users API Swagger:** http://localhost:5001/swagger
+* **Events API Swagger:** http://localhost:5002/swagger
+* **Bookings API Swagger:** http://localhost:5003/swagger
 
-#### Локальный запуск приложения через IDE
+---
+# Локальный запуск приложения через IDE
 При локальном запуске приложения через IDE или через терминал (`dotnet run`) пароль к PostgreSQL хранится с 
 использованием встроенного инструмента **.NET Secret Manager (`dotnet user-secrets`)**.
 
@@ -156,10 +119,12 @@ POSTGRES_PASSWORD=your_secure_password
 
 ## Создание миграции
 
-Для создания новой миграции выполните:
+Для создания новой миграции выполните  в корне решения (там, где лежит файл .sln) :
 
 ```bash
-dotnet ef migrations add InitialCreate
+dotnet ef migrations add InitialCreate --project EventManager.Users.Infrastructure --startup-project EventManager.Users.Presentation --output-dir Migrations
+dotnet ef migrations add InitialCreate --project EventManager.Events.Infrastructure --startup-project EventManager.Events.Presentation --output-dir Migrations
+dotnet ef migrations add InitialCreate --project EventManager.Bookings.Infrastructure --startup-project EventManager.Bookings.Presentation --output-dir Migrations
 ```
 
 где `InitialCreate` — имя миграции.
@@ -180,76 +145,6 @@ dotnet ef database update
 context.Database.Migrate();
 ```
 
-> Для выполнения команд `dotnet ef` может потребоваться установить инструмент Entity Framework Core CLI:
-
-```bash
-dotnet tool install --global dotnet-ef
-```
----
-
-### Unit-тесты
-Для юнит-тестов используется **Entity Framework Core InMemory Database**. Тесты не требуют подключения к PostgreSQL.
-
-Для каждого теста используется отдельное имя InMemory-базы:
-
-```csharp
-var dbName = Guid.NewGuid().ToString();
-
-services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase(dbName));
-```
-
-Это позволяет изолировать данные разных тестов и выполнять тесты независимо от состояния реальной базы данных
-
-### Интеграционные тесты
-
-Для проверки работы репозиториев с реальным PostgreSQL используются интеграционные тесты на базе **Testcontainers**.
-
-При запуске интеграционных тестов автоматически создаётся контейнер PostgreSQL, в котором выполняются тесты репозиториев.
-
-Для запуска интеграционных тестов необходимо:
-
-1. Установить **Docker**.
-2. Убедиться, что Docker Engine запущен.
-3. Выполнить:
-
-```bash
-dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
-```
-
-Testcontainers самостоятельно создаёт и запускает PostgreSQL-контейнер на время выполнения тестов.
-
-## Собрать проект
-```bash
-dotnet build EventManager\EventManager\EventManager.csproj -c Debug 
-```
-
-## Запустить приложение
-```bash
-dotnet run --project EventManager\EventManager\EventManager.csproj 
-```
-
-## После запуска приложение будет доступно по адресу:
-http://localhost:<port>
-
-# Запуск тестов
-
-Для запуска Unit-тестов выполните:
-
-```bash
-dotnet test EventManager\EventManager.Tests\EventManager.Tests.csproj
-```
-
-Для запуска интеграционных тестов выполните:
-
-```bash
-dotnet test EventManager\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj
-```
-
-# Swagger
-
-Swagger UI доступен по адресу:
-https://localhost:<port>/swagger
 
 ##  Безопасность и аутентификация
 
