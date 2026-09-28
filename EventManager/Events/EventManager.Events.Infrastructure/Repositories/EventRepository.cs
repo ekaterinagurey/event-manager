@@ -73,5 +73,50 @@ namespace EventManager.Events.Infrastructure.Repositories
             _context.Events.Remove(currentEvent);
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<bool> TryDecreaseAvailableSeatsAsync(Guid bookingId,
+                                                               Guid eventId,
+                                                               int seatsCount,
+                                                               CancellationToken cancellationToken = default)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            //  Проверяем, обрабатывали ли мы уже этот BookingId
+            var alreadyProcessed = await _context.ProcessedBookings
+                .AnyAsync(pb => pb.BookingId == bookingId, cancellationToken);
+
+            if (alreadyProcessed)
+            {
+                // Повторный дубликат — пропускаем выполнение бизнес-логики
+                return false;
+            }
+
+            // Находим мероприятие и проверяем инварианты
+            var currentEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+            if (currentEvent == null)
+            {
+                throw new InvalidOperationException($"Event {eventId} not found");
+            }
+
+            if (currentEvent.AvailableSeats < seatsCount)
+            {
+                throw new InvalidOperationException($"Not enough seats available for event {eventId}");
+            }
+
+            // Уменьшаем количество мест
+            currentEvent.TryReserveSeats();
+
+            // Фиксируем BookingId
+            _context.ProcessedBookings.Add(new ProcessedBooking
+            {
+                BookingId = bookingId,
+                ProcessedAtUtc = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return true;
+        }
     }
 }

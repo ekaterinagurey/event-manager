@@ -83,7 +83,8 @@ namespace EventManager.Events.Application.Services
             return true;
         }
 
-        public async Task<bool> DecreaseAvailableSeatsAsync(Guid eventId, 
+        public async Task<bool> DecreaseAvailableSeatsAsync(Guid bookingId,
+                                                            Guid eventId, 
                                                             int seatsCount,
                                                             CancellationToken cancellationToken = default)
         {
@@ -91,10 +92,15 @@ namespace EventManager.Events.Application.Services
             if (existingEvent is null)
                 return false;
 
-            if (!existingEvent.TryReserveSeats(seatsCount))
+            if(await _eventRepository.TryDecreaseAvailableSeatsAsync(bookingId, 
+                                                               existingEvent.Id,
+                                                               seatsCount,
+                                                               cancellationToken) == false)
                 return false;
 
-            await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+            // if (!existingEvent.TryReserveSeats(seatsCount))
+            // return false;
+            // await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
             return true;
         }
 
@@ -107,7 +113,7 @@ namespace EventManager.Events.Application.Services
                 return false;
 
             existingEvent.ReleaseSeats(seatsCount);
-
+            
             await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
             return true;
         }

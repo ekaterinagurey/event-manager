@@ -25,15 +25,14 @@ namespace EventManager.Events.Infrastructure.Messaging
             _logger = logger;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+     
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return Task.Run(() => StartConsumerLoop(stoppingToken), stoppingToken);
-        }
+            // Не блокируем старт приложения
+            await Task.Yield();
 
-        private void StartConsumerLoop(CancellationToken stoppingToken)
-        {
             var bootstrapServers = _configuration["Kafka:BootstrapServers"]
-                ?? throw new InvalidOperationException("Kafka:BootstrapServers configuration is missing.");
+                             ?? throw new InvalidOperationException("Kafka:BootstrapServers configuration is missing.");
 
             var consumerGroup = _configuration["Kafka:ConsumerGroup"] ?? "events-service-group";
 
@@ -55,7 +54,7 @@ namespace EventManager.Events.Infrastructure.Messaging
                 try
                 {
                     var consumeResult = consumer.Consume(stoppingToken);
-                    ProcessMessage(consumer, consumeResult, stoppingToken);
+                    await ProcessMessageAsync(consumer, consumeResult, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -70,9 +69,9 @@ namespace EventManager.Events.Infrastructure.Messaging
             consumer.Close();
         }
 
-        private void ProcessMessage(IConsumer<string, string> consumer,
-                                    ConsumeResult<string, string> consumeResult,
-                                    CancellationToken stoppingToken)
+        private async Task ProcessMessageAsync(IConsumer<string, string> consumer,
+                                               ConsumeResult<string, string> consumeResult,
+                                               CancellationToken stoppingToken)
         {
             try
             {
@@ -90,10 +89,11 @@ namespace EventManager.Events.Infrastructure.Messaging
                 {
                     var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
 
-                    var success = eventService.DecreaseAvailableSeatsAsync(
+                    var success = await eventService.DecreaseAvailableSeatsAsync(
+                        currentEvent.BookingId,
                         currentEvent.EventId,
                         currentEvent.SeatsCount,
-                        stoppingToken).GetAwaiter().GetResult();
+                        stoppingToken);
 
                     if (!success)
                     {
@@ -113,5 +113,7 @@ namespace EventManager.Events.Infrastructure.Messaging
                 throw;
             }
         }
+
+
     }
 }

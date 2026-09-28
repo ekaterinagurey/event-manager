@@ -30,15 +30,13 @@ namespace EventManager.Events.Infrastructure.Messaging
             _logger = logger;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return Task.Run(() => StartConsumerLoop(stoppingToken), stoppingToken);
-        }
+            // Не блокируем старт приложения
+            await Task.Yield();
 
-        private void StartConsumerLoop(CancellationToken stoppingToken)
-        {
             var bootstrapServers = _configuration["Kafka:BootstrapServers"]
-                ?? throw new InvalidOperationException("Kafka:BootstrapServers is missing.");
+                            ?? throw new InvalidOperationException("Kafka:BootstrapServers is missing.");
 
             var consumerGroup = _configuration["Kafka:ConsumerGroup"] ?? "events-service-group";
 
@@ -67,10 +65,9 @@ namespace EventManager.Events.Infrastructure.Messaging
                         using var scope = _scopeFactory.CreateScope();
                         var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
 
-                        var success = eventService.ReleaseSeatsAsync(currentEvent.EventId,
+                        var success = await eventService.ReleaseSeatsAsync(currentEvent.EventId,
                                                                      currentEvent.SeatsCount,
-                                                                     stoppingToken)
-                            .GetAwaiter().GetResult();
+                                                                     stoppingToken);
 
                         if (success)
                         {

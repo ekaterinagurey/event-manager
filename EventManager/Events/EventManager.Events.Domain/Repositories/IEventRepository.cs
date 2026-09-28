@@ -15,5 +15,9 @@ namespace EventManager.Events.Domain.Repositories
         Task CreateAsync(Event newEvent, CancellationToken cancellationToken);
         Task UpdateAsync(Event newEvent, CancellationToken cancellationToken);
         Task DeleteAsync(Event currentEvent, CancellationToken cancellationToken);
+        Task<bool> TryDecreaseAvailableSeatsAsync(Guid bookingId,
+                                                  Guid eventId,
+                                                  int seatsCount,
+                                                  CancellationToken cancellationToken = default);
     }
 }
