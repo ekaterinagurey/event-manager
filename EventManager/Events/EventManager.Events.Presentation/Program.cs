@@ -1,4 +1,6 @@
+using EventManager.Bookings.Infrastructure.Cache;
 using EventManager.Events.Application;
+using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Infrastructure;
 using EventManager.Events.Presentation.Extensions;
 using EventManager.Events.Presentation.Middleware;
@@ -22,6 +24,11 @@ var options = new ConfigurationOptions
 };
 
 var connection = await ConnectionMultiplexer.ConnectAsync(options);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(connection);
+
+builder.Services.AddSingleton<ICacheService, CacheService>();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();

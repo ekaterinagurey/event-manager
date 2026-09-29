@@ -1,4 +1,5 @@
-﻿using EventManager.Events.Application.Interfaces;
+﻿using EventManager.Bookings.Infrastructure.Cache;
+using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Domain.Repositories;
 using EventManager.Events.Infrastructure.Authentication;
 using EventManager.Events.Infrastructure.Messaging;
