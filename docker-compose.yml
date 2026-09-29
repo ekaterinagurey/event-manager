@@ -41,6 +41,12 @@ services:
       timeout: 10s
       retries: 15
 
+  redis:
+    image: redis:7
+    container_name: event-manager-redis
+    ports:
+      - "6379:6379" 
+
   # ─────────────────────────── Базы данных (по одной на сервис) ───────────────────────────
   eventapi-postgres:
     image: postgres:16-alpine
