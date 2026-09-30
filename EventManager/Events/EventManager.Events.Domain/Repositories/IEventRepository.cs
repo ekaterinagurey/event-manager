@@ -19,5 +19,7 @@ namespace EventManager.Events.Domain.Repositories
                                                   Guid eventId,
                                                   int seatsCount,
                                                   CancellationToken cancellationToken = default);
+
+        Task<List<Event>> GetTopEventsAsync(int count = 10, CancellationToken cancellationToken = default);
     }
 }

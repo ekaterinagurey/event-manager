@@ -30,6 +30,12 @@ namespace EventManager.Bookings.Infrastructure.Cache
             try
             {
                 RedisValue value = await _db.StringGetAsync(key);
+
+                if (value.IsNullOrEmpty)
+                {
+                    return default;
+                }
+
                 return JsonSerializer.Deserialize<T>(value!, JsonOptions);
             }
             catch (Exception ex) when (ex is RedisException or TimeoutException or IOException)
@@ -39,12 +45,12 @@ namespace EventManager.Bookings.Infrastructure.Cache
             }
         }
 
-        public async Task SetAsync<T>(string key, T value, int expiration, CancellationToken ct = default)
+        public async Task SetAsync<T>(string key, T value, TimeSpan expiration, CancellationToken ct = default)
         {
             try
             {
                 var serialized = JsonSerializer.Serialize(value, JsonOptions);
-                await _db.StringSetAsync(key, serialized, TimeSpan.FromMinutes(expiration));
+                await _db.StringSetAsync(key, serialized, expiration);
             }
             catch (Exception ex) when (ex is RedisException or TimeoutException or IOException)
             {
