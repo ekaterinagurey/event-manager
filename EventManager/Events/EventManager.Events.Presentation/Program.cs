@@ -26,11 +26,8 @@ var options = new ConfigurationOptions
 var connection = await ConnectionMultiplexer.ConnectAsync(options);
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(connection);
-
 builder.Services.AddSingleton<ICacheService, CacheService>();
-
 builder.Services.AddInfrastructure(builder.Configuration);
-
 builder.Services.AddControllers();
 builder.Services.AddConfiguredSwagger();
 
