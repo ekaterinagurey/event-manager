@@ -19,8 +19,12 @@ namespace EventManager.Events.Infrastructure
     public static class DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services,
-                                                           IConfiguration configuration)
+                                                           IConfiguration configuration,
+                                                           ConnectionMultiplexer redisConnection)
         {
+            services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+            services.AddSingleton<ICacheService, CacheService>();
+
             var rawConnectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -73,7 +77,7 @@ namespace EventManager.Events.Infrastructure
                 });
 
             services.AddAuthorization();
-          
+
             return services;
         }
 

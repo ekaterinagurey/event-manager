@@ -1,33 +1,44 @@
 using EventManager.Bookings.Infrastructure.Cache;
 using EventManager.Events.Application;
 using EventManager.Events.Application.Interfaces;
+using EventManager.Events.Application.Options;
 using EventManager.Events.Infrastructure;
 using EventManager.Events.Presentation.Extensions;
 using EventManager.Events.Presentation.Middleware;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Подключение слоев
-builder.Services.AddApplication();
+var redisConfig = builder.Configuration
+    .GetSection(RedisCacheOptions.SectionName)
+    .Get<RedisCacheOptions>()
+    ?? throw new InvalidOperationException("Секция конфигурации 'Redis' отсутствует в appsettings.json.");
 
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
-            ?? throw new InvalidOperationException("Redis:ConnectionString configuration is missing.");
+builder.Services.Configure<RedisCacheOptions>(builder.Configuration.GetSection(RedisCacheOptions.SectionName));
 
-var options = new ConfigurationOptions
+// 2. Формируем опции подключения на основе конфигурации
+var options = ConfigurationOptions.Parse(redisConfig.ConnectionString);
+
+if (!string.IsNullOrWhiteSpace(redisConfig.Password))
 {
-    EndPoints = { redisConnectionString },
-    Password = "secret",
-    ConnectTimeout = 5000,
-    SyncTimeout = 3000,
-    AbortOnConnectFail = false,
-};
+    options.Password = redisConfig.Password;
+}
 
+options.ConnectTimeout = redisConfig.ConnectTimeoutMs;
+options.SyncTimeout = redisConfig.SyncTimeoutMs;
+options.AbortOnConnectFail = false;
+options.ConnectRetry = 3;
+
+// 3. Асинхронное подключение
 var connection = await ConnectionMultiplexer.ConnectAsync(options);
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(connection);
 builder.Services.AddSingleton<ICacheService, CacheService>();
-builder.Services.AddInfrastructure(builder.Configuration);
+
+// Подключение слоев
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration, connection);
+
 builder.Services.AddControllers();
 builder.Services.AddConfiguredSwagger();
 

@@ -1,10 +1,12 @@
 ﻿using EventManager.Events.Application.DTOs;
 using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Application.Mappers;
+using EventManager.Events.Application.Options;
 using EventManager.Events.Domain.Entities;
 using EventManager.Events.Domain.Exceptions;
 using EventManager.Events.Domain.Repositories;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Threading;
 
 namespace EventManager.Events.Application.Services
@@ -14,13 +16,16 @@ namespace EventManager.Events.Application.Services
         private readonly IEventRepository _eventRepository;
         private readonly ICacheService _cacheService;
         private readonly ILogger<EventService> _logger;
+        private readonly RedisCacheOptions _cacheOptions;
 
         public EventService(IEventRepository eventRepository,
                             ICacheService cacheService,
+                            IOptions<RedisCacheOptions> cacheOptions,
                             ILogger<EventService> logger)
         {
             _eventRepository = eventRepository;
             _cacheService = cacheService;
+            _cacheOptions = cacheOptions.Value;
             _logger = logger;
         }
 
@@ -62,7 +67,8 @@ namespace EventManager.Events.Application.Services
             var existingEventDTO = existingEvent.ToResponse();
 
             // сохраняем в кэш
-            await _cacheService.SetAsync(cacheKey, existingEventDTO, TimeSpan.FromMinutes(10), cancellationToken);
+            var ttl = TimeSpan.FromSeconds(_cacheOptions.EventByIdTtlMinutes);
+            await _cacheService.SetAsync(cacheKey, existingEventDTO, ttl, cancellationToken);
             _logger.LogInformation("Event {EventId} получен из БД и сохранён в кэш", id);
 
             return existingEventDTO;
@@ -176,7 +182,8 @@ namespace EventManager.Events.Application.Services
 
             if (topEvents.Count > 0)
             {
-                await _cacheService.SetAsync(cacheKey, topEventsDTO, TimeSpan.FromMinutes(2), cancellationToken);
+                var ttl = TimeSpan.FromSeconds(_cacheOptions.TopEventsTtlMinutes);
+                await _cacheService.SetAsync(cacheKey, topEventsDTO, ttl, cancellationToken);
                 _logger.LogInformation("Top-10 событий получены из БД и закэшированы");
             }
 
