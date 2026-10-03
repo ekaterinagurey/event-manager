@@ -80,6 +80,8 @@ PostgreSQL (`bookings_db`)
 USER_DB_PASSWORD=enter_your_pass
 EVENT_DB_PASSWORD=enter_your_pass
 BOOKING_DB_PASSWORD=enter_your_pass
+JWT_SECRET=your_secure_password_here
+KAFKA_BOOTSTRAP_SERVERS=kafka:00000
 
 # Конфигурация JWT токенов
 JWT_SECRET=super_secret_jwt_key_that_is_long_enough_32_bytes
@@ -101,6 +103,14 @@ docker compose up -d --build
 docker compose ps
 ```
 
+## Запуск тестов
+
+Проект покрыт изолированными Unit-тестами с подменой инфраструктурных зависимостей (Moq, FluentAssertions) и интеграционными тестами.
+
+###  Запуск всех тестов решения
+```bash
+dotnet test
+```
 
 # Доступ к интерфейсам и Swagger UI
 
@@ -158,7 +168,6 @@ dotnet ef database update
 ```csharp
 context.Database.Migrate();
 ```
-
 
 ##  Безопасность и аутентификация
 
