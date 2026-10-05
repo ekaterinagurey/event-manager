@@ -46,6 +46,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManager.Users.Presenta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManager.Shared.Contracts", "EventManager.Shared.Contracts\EventManager.Shared.Contracts.csproj", "{EECFA78F-8A3D-ACA8-E22E-C4BDD4B0E94C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventServiceTests", "Events\EventServiceTests\EventServiceTests.csproj", "{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +106,10 @@ Global
 		{EECFA78F-8A3D-ACA8-E22E-C4BDD4B0E94C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EECFA78F-8A3D-ACA8-E22E-C4BDD4B0E94C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EECFA78F-8A3D-ACA8-E22E-C4BDD4B0E94C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{09300D13-2A55-89D7-40C8-3CA8934DDDEF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EF0FBC04-FFB0-2DAF-19A9-35578A482828} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EECFA78F-8A3D-ACA8-E22E-C4BDD4B0E94C} = {3CCF735C-DB2E-496B-96A7-0AC0239ECCDF}
+		{2A97AF8B-0EA0-4DA4-A6E0-7719CBD30EFE} = {F4E03B99-5E63-4BED-85ED-1717C3300663}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AB33BF37-C7D4-4B33-BD9D-5707019ED4BA}

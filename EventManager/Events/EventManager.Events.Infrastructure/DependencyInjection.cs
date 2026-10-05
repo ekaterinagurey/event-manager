@@ -1,6 +1,7 @@
 ﻿using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Domain.Repositories;
 using EventManager.Events.Infrastructure.Authentication;
+using EventManager.Events.Infrastructure.Cache;
 using EventManager.Events.Infrastructure.Messaging;
 using EventManager.Events.Infrastructure.Repositories;
 using EventManager.Infrastructure.DataAccess;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using StackExchange.Redis;
 using System.Text;
 
 namespace EventManager.Events.Infrastructure
@@ -17,8 +19,12 @@ namespace EventManager.Events.Infrastructure
     public static class DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services,
-                                                           IConfiguration configuration)
+                                                           IConfiguration configuration,
+                                                           ConnectionMultiplexer redisConnection)
         {
+            services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+            services.AddSingleton<ICacheService, CacheService>();
+
             var rawConnectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -71,7 +77,7 @@ namespace EventManager.Events.Infrastructure
                 });
 
             services.AddAuthorization();
-          
+
             return services;
         }
 
