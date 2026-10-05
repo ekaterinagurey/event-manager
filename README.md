@@ -82,6 +82,7 @@ EVENT_DB_PASSWORD=enter_your_pass
 BOOKING_DB_PASSWORD=enter_your_pass
 JWT_SECRET=your_secure_password_here
 KAFKA_BOOTSTRAP_SERVERS=kafka:00000
+REDIS_SECRET=your_secure_password_here
 
 # Конфигурация JWT токенов
 JWT_SECRET=super_secret_jwt_key_that_is_long_enough_32_bytes

@@ -1,11 +1,8 @@
-using EventManager.Bookings.Infrastructure.Cache;
 using EventManager.Events.Application;
-using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Application.Options;
 using EventManager.Events.Infrastructure;
 using EventManager.Events.Presentation.Extensions;
 using EventManager.Events.Presentation.Middleware;
-using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +19,7 @@ var options = ConfigurationOptions.Parse(redisConfig.ConnectionString);
 
 if (!string.IsNullOrWhiteSpace(redisConfig.Password))
 {
-    options.Password = redisConfig.Password;
+    options.Password = builder.Configuration["REDIS_SECRET"] ?? throw new InvalidOperationException("Пароль для Redis не задан");
 }
 
 options.ConnectTimeout = redisConfig.ConnectTimeoutMs;
@@ -32,8 +29,6 @@ options.ConnectRetry = 3;
 
 // 3. Асинхронное подключение
 var connection = await ConnectionMultiplexer.ConnectAsync(options);
-
-builder.Services.AddSingleton<ICacheService, CacheService>();
 
 // Подключение слоев
 builder.Services.AddApplication();

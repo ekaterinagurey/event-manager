@@ -1,4 +1,5 @@
-﻿using EventManager.Events.Application.DTOs;
+﻿using EventManager.Events.Application.Cache;
+using EventManager.Events.Application.DTOs;
 using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Application.Options;
 using EventManager.Events.Application.Services;
@@ -48,7 +49,7 @@ namespace EventServiceTests
         {
             // Arrange
             var eventId = Guid.NewGuid();
-            var cacheKey = $"event:{eventId}";
+            var cacheKey = EventCacheKeys.EventById(eventId);
 
             var cachedDto = new EventInfoDTO()
             {
@@ -83,7 +84,7 @@ namespace EventServiceTests
         public async Task GetTopPopularEventsAsync_WhenCacheHit_ReturnsCachedListAndDoesNotCallRepository()
         {
             // Arrange
-            const string cacheKey = "events:top10";
+            const string cacheKey = EventCacheKeys.Top10;
 
             var eventId = Guid.NewGuid();
             var cachedDto = new EventInfoDTO()
@@ -141,7 +142,7 @@ namespace EventServiceTests
                 Description = expectedEvent.Description
             };
 
-            var cacheKey = $"event:{expectedEvent.Id}";
+            var cacheKey = EventCacheKeys.EventById(expectedEvent.Id);
 
             // Промах кэша
             _cacheServiceMock
@@ -177,7 +178,7 @@ namespace EventServiceTests
         public async Task GetTopPopularEventsAsync_WhenCacheMiss_FetchesFromRepositoryAndSavesToCache()
         {
             // Arrange
-            const string cacheKey = "events:top10";
+            const string cacheKey = EventCacheKeys.Top10;
             var expectedTtl = TimeSpan.FromMinutes(_cacheOptions.Value.TopEventsTtlMinutes);
 
             var expectedEvent = Event.Create(
@@ -235,7 +236,7 @@ namespace EventServiceTests
                 50,
                 "Test");
 
-            var cacheKey = $"event:{existingEntity.Id}";
+            var cacheKey = EventCacheKeys.EventById(existingEntity.Id);
 
             var updateDto = new UpdateEventDTO
             {
@@ -268,7 +269,7 @@ namespace EventServiceTests
                 50,
                 "Test");
 
-            var cacheKey = $"event:{existingEntity.Id}";
+            var cacheKey = EventCacheKeys.EventById(existingEntity.Id);
 
             var repoEvents = new List<Event> { existingEntity };
 

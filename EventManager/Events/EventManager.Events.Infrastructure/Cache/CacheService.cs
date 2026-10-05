@@ -1,10 +1,9 @@
 ﻿using EventManager.Events.Application.Interfaces;
-using EventManager.Events.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace EventManager.Bookings.Infrastructure.Cache
+namespace EventManager.Events.Infrastructure.Cache
 {
     public class CacheService : ICacheService
     {
@@ -37,6 +36,11 @@ namespace EventManager.Bookings.Infrastructure.Cache
                 }
 
                 return JsonSerializer.Deserialize<T>(value!, JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Ошибка десериализации ключа {Key}. Запрос пойдет в базу данных.", key);
+                return default;
             }
             catch (Exception ex) when (ex is RedisException or TimeoutException or IOException)
             {
