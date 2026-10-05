@@ -67,7 +67,7 @@ namespace EventManager.Events.Application.Services
             var existingEventDTO = existingEvent.ToResponse();
 
             // сохраняем в кэш
-            var ttl = TimeSpan.FromSeconds(_cacheOptions.EventByIdTtlMinutes);
+            var ttl = TimeSpan.FromMinutes(_cacheOptions.EventByIdTtlMinutes);
             await _cacheService.SetAsync(cacheKey, existingEventDTO, ttl, cancellationToken);
             _logger.LogInformation("Event {EventId} получен из БД и сохранён в кэш", id);
 
@@ -182,7 +182,7 @@ namespace EventManager.Events.Application.Services
 
             if (topEvents.Count > 0)
             {
-                var ttl = TimeSpan.FromSeconds(_cacheOptions.TopEventsTtlMinutes);
+                var ttl = TimeSpan.FromMinutes(_cacheOptions.TopEventsTtlMinutes);
                 await _cacheService.SetAsync(cacheKey, topEventsDTO, ttl, cancellationToken);
                 _logger.LogInformation("Top-10 событий получены из БД и закэшированы");
             }

@@ -31,11 +31,13 @@ namespace EventServiceTests
                 TopEventsTtlMinutes = 120
             });
 
-            _eventService = new EventService(
-                _eventRepositoryMock.Object,
-                _cacheServiceMock.Object,
-                _cacheOptions,
-                _loggerMock.Object);
+            _eventService = new EventService(_eventRepositoryMock.Object,
+                                             _cacheServiceMock.Object,
+                                             _cacheOptions,
+                                             _loggerMock.Object)
+            {
+
+            };
         }
 
         #region Сценарии попадания в кэш
@@ -120,7 +122,7 @@ namespace EventServiceTests
         public async Task GetEventByIdAsync_WhenCacheMiss_FetchesFromRepositoryAndSavesToCache()
         {
             // Arrange
-            var expectedTtl = TimeSpan.FromSeconds(_cacheOptions.Value.EventByIdTtlMinutes);
+            var expectedTtl = TimeSpan.FromMinutes(_cacheOptions.Value.EventByIdTtlMinutes);
 
             var expectedEvent = Event.Create("Test Event",
                                              DateTime.UtcNow,
@@ -176,7 +178,7 @@ namespace EventServiceTests
         {
             // Arrange
             const string cacheKey = "events:top10";
-            var expectedTtl = TimeSpan.FromSeconds(_cacheOptions.Value.TopEventsTtlMinutes);
+            var expectedTtl = TimeSpan.FromMinutes(_cacheOptions.Value.TopEventsTtlMinutes);
 
             var expectedEvent = Event.Create(
                 "Test Event",
