@@ -118,5 +118,14 @@ namespace EventManager.Events.Infrastructure.Repositories
 
             return true;
         }
+
+        public async Task<List<Event>> GetTopEventsAsync(int count = 10, CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Where(e => e.TotalSeats > 0)
+                .OrderByDescending(e => ((double)(e.TotalSeats - e.AvailableSeats)) / e.TotalSeats)
+                .Take(count)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

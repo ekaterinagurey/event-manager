@@ -41,6 +41,18 @@ services:
       timeout: 10s
       retries: 15
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: event-manager-redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-secret}"]
+    ports:
+      - "6379:6379" 
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-secret}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # ─────────────────────────── Базы данных (по одной на сервис) ───────────────────────────
   eventapi-postgres:
     image: postgres:16-alpine
@@ -127,7 +139,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=eventapi-postgres;Port=5432;Database=eventapi;Username=postgres;Password=${EVENT_DB_PASSWORD:-postgres}
       - Kafka__BootstrapServers=kafka:29092
+      - Redis__ConnectionString=redis:6379
+      - Redis_Password=${REDIS_SECRET:-secret}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
+
     depends_on:
       eventapi-postgres:
         condition: service_healthy

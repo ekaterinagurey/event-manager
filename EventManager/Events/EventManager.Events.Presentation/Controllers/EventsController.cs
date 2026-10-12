@@ -16,6 +16,14 @@ namespace EventManager.Events.Presentation.Controllers
             _eventService = eventService;
         }
 
+        [HttpGet("top")]
+        [ProducesResponseType(typeof(List<EventInfoDTO>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTopEvents(CancellationToken cancellationToken)
+        {
+            var result = await _eventService.GetTopPopularEventsAsync(cancellationToken);
+            return Ok(result);
+        }
+
         [HttpGet]
         public async Task<ActionResult<PaginateResultDTO<Event>>> GetAll([FromQuery] GetEventsRequestDTO filter)
         {
@@ -23,7 +31,7 @@ namespace EventManager.Events.Presentation.Controllers
         }
 
         [HttpGet("{id:Guid}")]
-        public async Task<ActionResult<Event>> GetById(Guid id)
+        public async Task<ActionResult<EventInfoDTO>> GetById(Guid id)
         {
             return Ok(await _eventService.GetEventByIdAsync(id));
         }

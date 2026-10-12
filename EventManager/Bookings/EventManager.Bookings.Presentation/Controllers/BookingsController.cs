@@ -23,6 +23,7 @@ namespace EventManager.Bookings.Presentation.Controllers
 
         [Authorize]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<Booking>> GetById(Guid id)
         {
@@ -33,7 +34,7 @@ namespace EventManager.Bookings.Presentation.Controllers
 
             if (booking.UserId != currentUserId && !_currentUserService.IsAdmin)
             {
-                throw new AccessDeniedException("У вас нет прав на отмену этой брони.");
+                throw new AccessDeniedException("У вас нет прав на просмотр этой брони.");
             }
 
             return Ok(booking);
@@ -65,7 +66,9 @@ namespace EventManager.Bookings.Presentation.Controllers
             var currentUserId = _currentUserService.UserId
                ?? throw new UnauthorizedException();
 
-            if (!_currentUserService.IsAdmin)
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+
+            if (booking.UserId != currentUserId && !_currentUserService.IsAdmin)
             {
                 throw new AccessDeniedException("У вас нет прав на отмену этой брони.");
             }

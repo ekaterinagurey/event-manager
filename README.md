@@ -46,6 +46,20 @@ PostgreSQL (`bookings_db`)
 [Events Service (BookingConfirmedConsumer)]
     6. Уменьшает счётчик свободных мест на событии
 
+#  Стратегия кэширования и инвалидации (Redis)
+
+Для ускорения операций чтения в сервисе **Events** используется паттерн **Cache-Aside**.
+
+| Данные | Ключ Redis | TTL | Стратегия обновления | Обоснование |
+| :--- | :--- | :--- | :--- | :--- |
+| **Детали события** (`GET /events/{id}`) | `event:{id}` | **10 минут** | Инвалидация при записи + TTL | Детали и остаток мест критичны для клиента при оформлении брони. Кэш сбрасывается при любых изменениях. TTL в 10 минут выступает страховкой на случай сбоев сети. |
+| **Топ-10 событий** (`GET /events/top`) | `events:top10` | **2 минуты** | Только по TTL | Достаточно обновлять по TTL: это рейтинговый агрегат, небольшое устаревание здесь некритично |
+
+## Порядок операций при изменении данных (Database-First)
+Любая модификация данных (через REST API или при потреблении сообщений из Apache Kafka) строго следует порядку:
+1. **Первичная фиксация в БД:** изменения применяются и коммитятся в PostgreSQL. База данных остаётся единственным источником истины.
+2. **Сброс ключа в Redis:** вызывается `_cacheService.RemoveAsync($"event:{id}")`.
+3. Следующий запрос `GET /events/{id}` не находит ключ в Redis, запрашивает свежие данные из PostgreSQL и наполняет кэш заново.
 
 # Инструкция по запуску
 
@@ -66,6 +80,9 @@ PostgreSQL (`bookings_db`)
 USER_DB_PASSWORD=enter_your_pass
 EVENT_DB_PASSWORD=enter_your_pass
 BOOKING_DB_PASSWORD=enter_your_pass
+JWT_SECRET=your_secure_password_here
+KAFKA_BOOTSTRAP_SERVERS=kafka:00000
+REDIS_SECRET=your_secure_password_here
 
 # Конфигурация JWT токенов
 JWT_SECRET=super_secret_jwt_key_that_is_long_enough_32_bytes
@@ -87,6 +104,14 @@ docker compose up -d --build
 docker compose ps
 ```
 
+## Запуск тестов
+
+Проект покрыт изолированными Unit-тестами с подменой инфраструктурных зависимостей (Moq, FluentAssertions) и интеграционными тестами.
+
+###  Запуск всех тестов решения
+```bash
+dotnet test
+```
 
 # Доступ к интерфейсам и Swagger UI
 
@@ -144,7 +169,6 @@ dotnet ef database update
 ```csharp
 context.Database.Migrate();
 ```
-
 
 ##  Безопасность и аутентификация
 

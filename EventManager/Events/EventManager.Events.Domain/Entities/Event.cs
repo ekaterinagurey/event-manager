@@ -29,8 +29,9 @@ namespace EventManager.Events.Domain.Entities
             AvailableSeats = totalSeats;
         }
 
-        private Event()
+        private Event(Guid id)
         {
+            Id = id;
         }
 
         public static Event Create(string title,

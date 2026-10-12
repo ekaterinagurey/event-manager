@@ -1,9 +1,13 @@
-﻿using EventManager.Events.Application.DTOs;
+﻿using EventManager.Events.Application.Cache;
+using EventManager.Events.Application.DTOs;
 using EventManager.Events.Application.Interfaces;
 using EventManager.Events.Application.Mappers;
+using EventManager.Events.Application.Options;
 using EventManager.Events.Domain.Entities;
 using EventManager.Events.Domain.Exceptions;
 using EventManager.Events.Domain.Repositories;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Threading;
 
 namespace EventManager.Events.Application.Services
@@ -11,9 +15,19 @@ namespace EventManager.Events.Application.Services
     public class EventService : IEventService
     {
         private readonly IEventRepository _eventRepository;
-        public EventService(IEventRepository eventRepository)
+        private readonly ICacheService _cacheService;
+        private readonly ILogger<EventService> _logger;
+        private readonly RedisCacheOptions _cacheOptions;
+
+        public EventService(IEventRepository eventRepository,
+                            ICacheService cacheService,
+                            IOptions<RedisCacheOptions> cacheOptions,
+                            ILogger<EventService> logger)
         {
             _eventRepository = eventRepository;
+            _cacheService = cacheService;
+            _cacheOptions = cacheOptions.Value;
+            _logger = logger;
         }
 
         public async Task<PaginateResultDTO<Event>> GetEventsAsync(GetEventsRequestDTO filter, CancellationToken cancellationToken = default)
@@ -35,11 +49,30 @@ namespace EventManager.Events.Application.Services
             };
         }
 
-        public async Task<Event> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<EventInfoDTO> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
+            var cacheKey = EventCacheKeys.EventById(id);
+
+            // проверяем в кэше
+            var cachedEvent = await _cacheService.GetAsync<EventInfoDTO>(cacheKey, cancellationToken);
+
+            if (cachedEvent != null)
+            {
+                _logger.LogInformation($"Event {id} взят из кэша");
+                return cachedEvent;
+            }
+
             var existingEvent = await _eventRepository.GetByIdAsync(id, cancellationToken)
-           ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
-            return existingEvent;
+                ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
+
+            var existingEventDTO = existingEvent.ToResponse();
+
+            // сохраняем в кэш
+            var ttl = TimeSpan.FromMinutes(_cacheOptions.EventByIdTtlMinutes);
+            await _cacheService.SetAsync(cacheKey, existingEventDTO, ttl, cancellationToken);
+            _logger.LogInformation("Event {EventId} получен из БД и сохранён в кэш", id);
+
+            return existingEventDTO;
         }
 
         public async Task<EventInfoDTO> CreateEventAsync(CreateEventDTO newEvent, CancellationToken cancellationToken = default)
@@ -71,6 +104,8 @@ namespace EventManager.Events.Application.Services
                                  editingEvent.Description);
 
             await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+            await _cacheService.RemoveAsync(EventCacheKeys.EventById(id), cancellationToken);
+
             return existingEvent.ToResponse();
         }
 
@@ -80,11 +115,15 @@ namespace EventManager.Events.Application.Services
             ?? throw new NotFoundException($"Событие с id = {id} не найдено.");
 
             await _eventRepository.DeleteAsync(existingEvent, cancellationToken);
+
+            // Инвалидируем кэш после удаления события
+            await _cacheService.RemoveAsync(EventCacheKeys.EventById(id), cancellationToken);
+
             return true;
         }
 
         public async Task<bool> DecreaseAvailableSeatsAsync(Guid bookingId,
-                                                            Guid eventId, 
+                                                            Guid eventId,
                                                             int seatsCount,
                                                             CancellationToken cancellationToken = default)
         {
@@ -92,20 +131,21 @@ namespace EventManager.Events.Application.Services
             if (existingEvent is null)
                 return false;
 
-            if(await _eventRepository.TryDecreaseAvailableSeatsAsync(bookingId, 
+            if (await _eventRepository.TryDecreaseAvailableSeatsAsync(bookingId,
                                                                existingEvent.Id,
                                                                seatsCount,
                                                                cancellationToken) == false)
                 return false;
 
-            // if (!existingEvent.TryReserveSeats(seatsCount))
-            // return false;
-            // await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+            // Инвалидируем кэш после коммита транзакции
+            await _cacheService.RemoveAsync(EventCacheKeys.EventById(eventId), cancellationToken);
+            _logger.LogInformation($"Cache invalidated for event {eventId} after booking {bookingId}");
+
             return true;
         }
 
         public async Task<bool> ReleaseSeatsAsync(Guid eventId,
-                                                  int seatsCount, 
+                                                  int seatsCount,
                                                   CancellationToken cancellationToken = default)
         {
             var existingEvent = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
@@ -113,9 +153,42 @@ namespace EventManager.Events.Application.Services
                 return false;
 
             existingEvent.ReleaseSeats(seatsCount);
-            
             await _eventRepository.UpdateAsync(existingEvent, cancellationToken);
+
+            //  Инвалидируем кэш
+            await _cacheService.RemoveAsync(EventCacheKeys.EventById(eventId), cancellationToken);
+            _logger.LogInformation($"Cache invalidated for event {eventId} after booking cancellation");
+
             return true;
+        }
+
+        public async Task<List<EventInfoDTO>> GetTopPopularEventsAsync(CancellationToken cancellationToken = default)
+        {
+            const string cacheKey = EventCacheKeys.Top10;
+
+            // проверка кэша
+            var cachedTop = await _cacheService.GetAsync<List<EventInfoDTO>>(cacheKey, cancellationToken);
+
+            if (cachedTop != null && cachedTop.Count > 0)
+
+            {
+                _logger.LogInformation("Top-10 событий получены из кэша Redis");
+                return cachedTop;
+            }
+
+            // получаем топ 10 из базы
+            var topEvents = await _eventRepository.GetTopEventsAsync(10, cancellationToken);
+
+            var topEventsDTO = topEvents.Select(e => e.ToResponse());
+
+            if (topEvents.Count > 0)
+            {
+                var ttl = TimeSpan.FromMinutes(_cacheOptions.TopEventsTtlMinutes);
+                await _cacheService.SetAsync(cacheKey, topEventsDTO, ttl, cancellationToken);
+                _logger.LogInformation("Top-10 событий получены из БД и закэшированы");
+            }
+
+            return topEventsDTO.ToList();
         }
     }
 }

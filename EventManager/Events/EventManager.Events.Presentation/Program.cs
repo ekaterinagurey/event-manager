@@ -1,13 +1,38 @@
 using EventManager.Events.Application;
+using EventManager.Events.Application.Options;
 using EventManager.Events.Infrastructure;
 using EventManager.Events.Presentation.Extensions;
 using EventManager.Events.Presentation.Middleware;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var redisConfig = builder.Configuration
+    .GetSection(RedisCacheOptions.SectionName)
+    .Get<RedisCacheOptions>()
+    ?? throw new InvalidOperationException("Секция конфигурации 'Redis' отсутствует в appsettings.json.");
+
+builder.Services.Configure<RedisCacheOptions>(builder.Configuration.GetSection(RedisCacheOptions.SectionName));
+
+// 2. Формируем опции подключения на основе конфигурации
+var options = ConfigurationOptions.Parse(redisConfig.ConnectionString);
+
+if (!string.IsNullOrWhiteSpace(redisConfig.Password))
+{
+    options.Password = builder.Configuration["REDIS_SECRET"] ?? throw new InvalidOperationException("Пароль для Redis не задан");
+}
+
+options.ConnectTimeout = redisConfig.ConnectTimeoutMs;
+options.SyncTimeout = redisConfig.SyncTimeoutMs;
+options.AbortOnConnectFail = false;
+options.ConnectRetry = 3;
+
+// 3. Асинхронное подключение
+var connection = await ConnectionMultiplexer.ConnectAsync(options);
+
 // Подключение слоев
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, connection);
 
 builder.Services.AddControllers();
 builder.Services.AddConfiguredSwagger();
