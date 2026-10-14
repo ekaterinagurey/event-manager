@@ -5,8 +5,20 @@ using EventManager.Users.Presentation.Middleware;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Подключение Serilog как провайдера логирования
+builder.Host.UseSerilog((ctx, services, cfg) =>
+{
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+       .ReadFrom.Services(services)
+       .Enrich.FromLogContext()
+       .Enrich.WithProperty("ServiceName", "user-service") // для идентификации источника
+       .WriteTo.Console(new CompactJsonFormatter());
+});
 
 // Подключение слоев
 builder.Services.AddApplication();
@@ -37,6 +49,9 @@ builder.Services.AddOpenTelemetry()
         .AddPrometheusExporter());
 
 var app = builder.Build();
+
+// Структурированный лог HTTP-запросов (ставится в начале конвейера middleware)
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

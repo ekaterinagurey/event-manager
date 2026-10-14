@@ -6,9 +6,21 @@ using EventManager.Events.Presentation.Middleware;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Formatting.Compact;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Подключение Serilog как провайдера логирования
+builder.Host.UseSerilog((ctx, services, cfg) =>
+{
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+       .ReadFrom.Services(services)
+       .Enrich.FromLogContext()
+       .Enrich.WithProperty("ServiceName", "events-service") // для идентификации источника
+       .WriteTo.Console(new CompactJsonFormatter());
+});
 
 var redisConfig = builder.Configuration
     .GetSection(RedisCacheOptions.SectionName)
@@ -62,6 +74,9 @@ builder.Services.AddOpenTelemetry()
         .AddPrometheusExporter());
 
 var app = builder.Build();
+
+// Структурированный лог HTTP-запросов (ставится в начале конвейера middleware)
+app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {

@@ -75,7 +75,7 @@ namespace EventManager.Bookings.Application.BackgroundServices
                 booking.Confirm();
                 await bookingRepository.UpdateAsync(booking, stoppingToken);
 
-                _logger.LogInformation($"Booking {booking.Id} confirmed.");
+                _logger.LogInformation("Booking {BookingId} confirmed.", booking.Id);
 
                 // Публикация события о бронировании для сервиса Event
                 var confirmedEvent = new BookingConfirmedEvent(booking.Id,
@@ -91,7 +91,7 @@ namespace EventManager.Bookings.Application.BackgroundServices
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while processing booking {bookingId}");
+                _logger.LogError(ex, "Error while processing booking {BookingId}", bookingId);
                 try
                 {
                     using var scope = _scopeFactory.CreateScope();
@@ -104,12 +104,12 @@ namespace EventManager.Bookings.Application.BackgroundServices
                         booking.Reject();
                         await bookingRepository.UpdateAsync(booking, stoppingToken);
 
-                        _logger.LogError(ex, $"Booking {bookingId} rejected due to processing error");
+                        _logger.LogError(ex, "Booking {BookingId} rejected due to processing error", bookingId);
                     }
                 }
                 catch (Exception exExt)
                 {
-                    _logger.LogError(exExt, $"Failed to reject booking {bookingId} after error");
+                    _logger.LogError(exExt, "Failed to reject booking {BookingId} after error", bookingId);
                 }
             }
         }

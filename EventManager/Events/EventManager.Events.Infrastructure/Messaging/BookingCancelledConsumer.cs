@@ -6,12 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace EventManager.Events.Infrastructure.Messaging
 {
@@ -71,11 +66,11 @@ namespace EventManager.Events.Infrastructure.Messaging
 
                         if (success)
                         {
-                            _logger.LogInformation($"Места успешно возвращены для события {currentEvent.EventId}");
+                            _logger.LogInformation("Места успешно возвращены для события {EventId}", currentEvent.EventId);
                         }
                         else
                         {
-                            _logger.LogWarning($"Не удалось вернуть места для события {currentEvent.EventId}");
+                            _logger.LogWarning("Не удалось вернуть места для события {EventId}", currentEvent.EventId);
                         }
                     }
 

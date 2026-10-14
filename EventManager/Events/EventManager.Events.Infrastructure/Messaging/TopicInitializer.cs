@@ -34,7 +34,7 @@ namespace EventManager.Events.Infrastructure.Messaging
 
                 if (!topicBookingConfirmedExists)
                 {
-                    _logger.LogInformation($"Топик '{KafkaTopics.BookingConfirmed}' не найден.");
+                    _logger.LogInformation("Топик {Topic} не найден.", KafkaTopics.BookingConfirmed);
 
                     var topicSpecification = new TopicSpecification
                     {
@@ -44,7 +44,7 @@ namespace EventManager.Events.Infrastructure.Messaging
                     };
 
                     await adminClient.CreateTopicsAsync(new[] { topicSpecification });
-                    _logger.LogInformation($"Топик '{KafkaTopics.BookingConfirmed}' успешно создан.");
+                    _logger.LogInformation("Топик {Topic} успешно создан.", KafkaTopics.BookingConfirmed);
                 }
 
                 var topicBookingCancelledExists = metadata.Topics.
@@ -52,7 +52,7 @@ namespace EventManager.Events.Infrastructure.Messaging
 
                 if (!topicBookingCancelledExists)
                 {
-                    _logger.LogInformation($"Топик '{KafkaTopics.BookingCancelled}' не найден.");
+                    _logger.LogInformation("Топик '{Topic}' не найден.", KafkaTopics.BookingCancelled);
 
                     var topicSpecification = new TopicSpecification
                     {
@@ -62,7 +62,7 @@ namespace EventManager.Events.Infrastructure.Messaging
                     };
 
                     await adminClient.CreateTopicsAsync(new[] { topicSpecification });
-                    _logger.LogInformation($"Топик '{KafkaTopics.BookingCancelled}' успешно создан.");
+                    _logger.LogInformation("Топик '{Topic}' успешно создан.", KafkaTopics.BookingCancelled);
                 }
             }
             catch (Exception ex)
