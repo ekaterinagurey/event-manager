@@ -10,13 +10,17 @@ using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. Читаем имя сервиса и OTLP Endpoint из конфигурации
+var serviceName = builder.Configuration["ServiceName"] ?? "unknown-service";
+var otlpEndpoint = builder.Configuration["Otlp:Endpoint"];
+
 // Подключение Serilog как провайдера логирования
 builder.Host.UseSerilog((ctx, services, cfg) =>
 {
     cfg.ReadFrom.Configuration(ctx.Configuration)
        .ReadFrom.Services(services)
        .Enrich.FromLogContext()
-       .Enrich.WithProperty("ServiceName", "booking-service") // для идентификации источника
+       .Enrich.WithProperty("ServiceName", serviceName) // для идентификации источника
        .WriteTo.Console(new CompactJsonFormatter());
 });
 
@@ -26,8 +30,6 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddConfiguredSwagger();
-
-const string serviceName = "bookings-service";
 
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(serviceName: serviceName))
