@@ -150,7 +150,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=eventapi-postgres;Port=5432;Database=eventapi;Username=postgres;Password=${EVENT_DB_PASSWORD:-postgres}
       - Kafka__BootstrapServers=kafka:29092
       - Redis__ConnectionString=redis:6379
-      - Redis_Password=${REDIS_SECRET:-secret}
+      - REDIS_SECRET=${REDIS_SECRET:-secret}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
       - Otlp__Endpoint=http://jaeger:4317
       - ServiceName=events-service
