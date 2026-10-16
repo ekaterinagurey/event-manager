@@ -121,7 +121,7 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=userapi-postgres;Port=5432;Database=userapi;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=userapi-postgres;Port=5432;Database=userapi;Username=postgres;Password=${USER_DB_PASSWORD:-postgres}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
       - Otlp__Endpoint=http://jaeger:4317
       - ServiceName=users-service
