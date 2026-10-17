@@ -47,7 +47,7 @@ namespace EventManager.Events.Infrastructure.Messaging
             using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
 
             consumer.Subscribe(KafkaTopics.BookingConfirmed);
-            _logger.LogInformation($"Consumer подписан на топик '{KafkaTopics.BookingConfirmed}'. Группа: {consumerGroup}");
+            _logger.LogInformation("Consumer подписан на топик {Topic}. Группа: {ConsumerGroup}", KafkaTopics.BookingConfirmed, consumerGroup);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -80,7 +80,7 @@ namespace EventManager.Events.Infrastructure.Messaging
 
                 if (currentEvent is null)
                 {
-                    _logger.LogWarning($"Cобытие не найдено: {rawJson}");
+                    _logger.LogWarning("Событие не найдено: {RawMessage}", rawJson);
                     consumer.Commit(consumeResult);
                     return;
                 }
@@ -97,11 +97,11 @@ namespace EventManager.Events.Infrastructure.Messaging
 
                     if (!success)
                     {
-                        _logger.LogWarning($"Не удалось забронировать места для события {currentEvent.EventId} (Бронирование: {currentEvent.BookingId}).");
+                        _logger.LogWarning("Не удалось забронировать места для события {EventId} (Бронирование: {BookingId}).", currentEvent.EventId, currentEvent.BookingId);
                     }
                     else
                     {
-                        _logger.LogInformation($"Успешно забронировано мест: {currentEvent.SeatsCount} для события {currentEvent.EventId} (Бронирвание {currentEvent.BookingId}).");
+                        _logger.LogInformation("Успешно забронировано мест: {SeatsCount} для события {EventId} (Бронирвание {BookingId}).", currentEvent.SeatsCount, currentEvent.EventId, currentEvent.BookingId);
                     }
                 }
 

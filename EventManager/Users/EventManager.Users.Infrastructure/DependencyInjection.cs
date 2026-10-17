@@ -93,6 +93,9 @@ namespace EventManager.Users.Infrastructure
             {
                 var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
                 await db.Database.MigrateAsync();
+
+                var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                await userService.SeedAdminAsync("admin", "admin123!", CancellationToken.None);
             }
         }
     }

@@ -48,7 +48,7 @@ services:
     ports:
       - "6379:6379" 
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-secret}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_SECRET:-secret}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -121,8 +121,18 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=userapi-postgres;Port=5432;Database=userapi;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=userapi-postgres;Port=5432;Database=userapi;Username=postgres;Password=${USER_DB_PASSWORD:-postgres}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
+      - Otlp__Endpoint=http://jaeger:4317
+      - ServiceName=users-service
+
+    depends_on:
+      userapi-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
 
     # ==========================================
     # Events Service (Порт 5002)
@@ -140,14 +150,18 @@ services:
       - ConnectionStrings__DefaultConnection=Host=eventapi-postgres;Port=5432;Database=eventapi;Username=postgres;Password=${EVENT_DB_PASSWORD:-postgres}
       - Kafka__BootstrapServers=kafka:29092
       - Redis__ConnectionString=redis:6379
-      - Redis_Password=${REDIS_SECRET:-secret}
+      - REDIS_SECRET=${REDIS_SECRET:-secret}
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
+      - Otlp__Endpoint=http://jaeger:4317
+      - ServiceName=events-service
 
     depends_on:
       eventapi-postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      jaeger:
+        condition: service_started
 
     # ==========================================
     # Bookings Service (Порт 5003)
@@ -165,13 +179,50 @@ services:
       - ConnectionStrings__DefaultConnection=Host=bookingapi-postgres;Port=5432;Database=bookingapi;Username=postgres;Password=${BOOKING_DB_PASSWORD:-postgres}
       - Kafka__BootstrapServers=kafka:29092
       - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_that_is_long_enough_32_bytes}
+      - Otlp__Endpoint=http://jaeger:4317
+      - ServiceName=bookings-service
     depends_on:
       bookingapi-postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      jaeger:
+        condition: service_started
+
+    # =========================================================================
+    # Стек Observability (Prometheus, Jaeger, Grafana)
+    # =========================================================================
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: eventapi-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: eventapi-jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: eventapi-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
 
 volumes:
   eventapi_pgdata:
   userapi_pgdata:
   bookingapi_pgdata:
+  grafana-data:  

@@ -29,7 +29,7 @@ namespace EventManager.Bookings.Infrastructure.Messaging
             _producer = new ProducerBuilder<string, string>(producerConfig).Build();
         }
 
-        public async Task PublishBookingConfirmedAsync(BookingConfirmedEvent currentEvent, 
+        public async Task PublishBookingConfirmedAsync(BookingConfirmedEvent currentEvent,
                                                        CancellationToken cancellationToken = default)
         {
             var key = currentEvent.EventId.ToString();
@@ -47,11 +47,14 @@ namespace EventManager.Bookings.Infrastructure.Messaging
                                                                   message,
                                                                   cancellationToken);
 
-                _logger.LogInformation($"Kafka event published: Topic={deliveryResult.Topic},Key={key}");
+                _logger.LogInformation("Kafka event published: Topic={Topic},Key={Key}", deliveryResult, key);
             }
             catch (ProduceException<string, string> ex)
             {
-                _logger.LogError(ex, $"Failed to deliver message to Kafka topic {KafkaTopics.BookingConfirmed} for BookingId={currentEvent.BookingId}. Error: {ex.Error.Reason}");
+                _logger.LogError(ex,
+                                 "Failed to deliver message to Kafka topic {Topic} for BookingId={BookingId}",
+                                 KafkaTopics.BookingConfirmed,
+                                 currentEvent.BookingId);
                 throw;
             }
         }
@@ -66,7 +69,7 @@ namespace EventManager.Bookings.Infrastructure.Messaging
                                          new Message<string, string> { Key = key, Value = payload },
                                          cancellationToken);
 
-            _logger.LogInformation($"Опубликовано событие BookingCancelled для BookingId={currentEvent.BookingId}");
+            _logger.LogInformation("Опубликовано событие BookingCancelled для BookingId={BookingId}", currentEvent.BookingId);
         }
 
         public void Dispose()

@@ -1,35 +1,35 @@
 # ==========================================
-# Этап 1: Сборка и компиляция (SDK 9.0)
+# Р­С‚Р°Рї 1: РЎР±РѕСЂРєР° Рё РєРѕРјРїРёР»СЏС†РёСЏ (SDK 9.0)
 # ==========================================
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 1. Копируем файлы проектов для кэширования слоя restore
+# 1. РљРѕРїРёСЂСѓРµРј С„Р°Р№Р»С‹ РїСЂРѕРµРєС‚РѕРІ РґР»СЏ РєСЌС€РёСЂРѕРІР°РЅРёСЏ СЃР»РѕСЏ restore
 COPY ["Users/EventManager.Users.Domain/EventManager.Users.Domain.csproj", "Users/EventManager.Users.Domain/"]
 COPY ["Users/EventManager.Users.Application/EventManager.Users.Application.csproj", "Users/EventManager.Users.Application/"]
 COPY ["Users/EventManager.Users.Infrastructure/EventManager.Users.Infrastructure.csproj", "Users/EventManager.Users.Infrastructure/"]
 COPY ["Users/EventManager.Users.Presentation/EventManager.Users.Presentation.csproj", "Users/EventManager.Users.Presentation/"]
 
-# Восстанавливаем зависимости
+# Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·Р°РІРёСЃРёРјРѕСЃС‚Рё
 RUN dotnet restore "Users/EventManager.Users.Presentation/EventManager.Users.Presentation.csproj"
 
-# 2. Копируем исходный код
+# 2. РљРѕРїРёСЂСѓРµРј РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ
 COPY Users/ Users/
 
-# 3. Публикуем релизный бинарник в /app/publish
+# 3. РџСѓР±Р»РёРєСѓРµРј СЂРµР»РёР·РЅС‹Р№ Р±РёРЅР°СЂРЅРёРє РІ /app/publish
 WORKDIR "/src/Users/EventManager.Users.Presentation"
 RUN dotnet publish "EventManager.Users.Presentation.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # ==========================================
-# Этап 2: Финальный образ (Runtime ASP.NET 9.0)
+# Р­С‚Р°Рї 2: Р¤РёРЅР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р· (Runtime ASP.NET 9.0)
 # ==========================================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-# Порт по умолчанию для ASP.NET Core 8/9
+# РџРѕСЂС‚ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ ASP.NET Core 8/9
 EXPOSE 8080
 
-# Копируем скомпилированные файлы
+# РљРѕРїРёСЂСѓРµРј СЃРєРѕРјРїРёР»РёСЂРѕРІР°РЅРЅС‹Рµ С„Р°Р№Р»С‹
 COPY --from=build /app/publish .
 
 ENTRYPOINT ["dotnet", "EventManager.Users.Presentation.dll"]

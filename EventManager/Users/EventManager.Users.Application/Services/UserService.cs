@@ -57,5 +57,25 @@ namespace EventManager.Users.Application.Services
 
             return _jwtTokenService.GenerateToken(user);
         }
+
+        public async Task SeedAdminAsync(string login, string password, CancellationToken cancellationToken)
+        {
+            var normalizedLogin = login.Trim().ToLowerInvariant();
+
+            var existingUser = await _userRepository.GetByLoginAsync(normalizedLogin, cancellationToken);
+
+            if (existingUser != null)
+            {
+                return;
+            }
+
+            var passwordHash = _passwordHasher.HashPassword(password);
+
+            var adminUser = User.Create(normalizedLogin,
+                                        passwordHash,
+                                        UserRole.Admin);
+
+            await _userRepository.CreateAsync(adminUser, cancellationToken);
+        }
     }
 }

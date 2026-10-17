@@ -8,7 +8,6 @@ using EventManager.Events.Domain.Exceptions;
 using EventManager.Events.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Threading;
 
 namespace EventManager.Events.Application.Services
 {
@@ -58,7 +57,7 @@ namespace EventManager.Events.Application.Services
 
             if (cachedEvent != null)
             {
-                _logger.LogInformation($"Event {id} взят из кэша");
+                _logger.LogInformation("Event {EventId} взят из кэша", id);
                 return cachedEvent;
             }
 
@@ -139,8 +138,7 @@ namespace EventManager.Events.Application.Services
 
             // Инвалидируем кэш после коммита транзакции
             await _cacheService.RemoveAsync(EventCacheKeys.EventById(eventId), cancellationToken);
-            _logger.LogInformation($"Cache invalidated for event {eventId} after booking {bookingId}");
-
+            _logger.LogInformation("Cache invalidated for event {EventId} after booking {BookingId}", eventId, bookingId);
             return true;
         }
 
@@ -157,8 +155,7 @@ namespace EventManager.Events.Application.Services
 
             //  Инвалидируем кэш
             await _cacheService.RemoveAsync(EventCacheKeys.EventById(eventId), cancellationToken);
-            _logger.LogInformation($"Cache invalidated for event {eventId} after booking cancellation");
-
+            _logger.LogInformation("Cache invalidated for event {EventId} after booking cancellation", eventId);
             return true;
         }
 
