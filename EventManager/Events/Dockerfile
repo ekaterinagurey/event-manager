@@ -1,37 +1,37 @@
 # ==========================================
-# Этап 1: Сборка и компиляция (SDK 9.0)
+# Р­С‚Р°Рї 1: РЎР±РѕСЂРєР° Рё РєРѕРјРїРёР»СЏС†РёСЏ (SDK 9.0)
 # ==========================================
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 1. Копируем файлы проектов для кэширования слоя restore
+# 1. РљРѕРїРёСЂСѓРµРј С„Р°Р№Р»С‹ РїСЂРѕРµРєС‚РѕРІ РґР»СЏ РєСЌС€РёСЂРѕРІР°РЅРёСЏ СЃР»РѕСЏ restore
 COPY ["EventManager.Shared.Contracts/EventManager.Shared.Contracts.csproj", "EventManager.Shared.Contracts/"]
 COPY ["Events/EventManager.Events.Domain/EventManager.Events.Domain.csproj", "Events/EventManager.Events.Domain/"]
 COPY ["Events/EventManager.Events.Application/EventManager.Events.Application.csproj", "Events/EventManager.Events.Application/"]
 COPY ["Events/EventManager.Events.Infrastructure/EventManager.Events.Infrastructure.csproj", "Events/EventManager.Events.Infrastructure/"]
 COPY ["Events/EventManager.Events.Presentation/EventManager.Events.Presentation.csproj", "Events/EventManager.Events.Presentation/"]
 
-# Восстанавливаем зависимости
+# Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·Р°РІРёСЃРёРјРѕСЃС‚Рё
 RUN dotnet restore "Events/EventManager.Events.Presentation/EventManager.Events.Presentation.csproj"
 
-# 2. Копируем исходный код
+# 2. РљРѕРїРёСЂСѓРµРј РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ
 COPY EventManager.Shared.Contracts/ EventManager.Shared.Contracts/
 COPY Events/ Events/
 
-# 3. Публикуем релизный бинарник в /app/publish
+# 3. РџСѓР±Р»РёРєСѓРµРј СЂРµР»РёР·РЅС‹Р№ Р±РёРЅР°СЂРЅРёРє РІ /app/publish
 WORKDIR "/src/Events/EventManager.Events.Presentation"
 RUN dotnet publish "EventManager.Events.Presentation.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # ==========================================
-# Этап 2: Финальный образ (Runtime ASP.NET 9.0)
+# Р­С‚Р°Рї 2: Р¤РёРЅР°Р»СЊРЅС‹Р№ РѕР±СЂР°Р· (Runtime ASP.NET 9.0)
 # ==========================================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-# Порт по умолчанию для ASP.NET Core 8/9
+# РџРѕСЂС‚ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ ASP.NET Core 8/9
 EXPOSE 8080
 
-# Копируем скомпилированные файлы
+# РљРѕРїРёСЂСѓРµРј СЃРєРѕРјРїРёР»РёСЂРѕРІР°РЅРЅС‹Рµ С„Р°Р№Р»С‹
 COPY --from=build /app/publish .
 
 ENTRYPOINT ["dotnet", "EventManager.Events.Presentation.dll"]

@@ -48,7 +48,7 @@ services:
     ports:
       - "6379:6379" 
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-secret}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_SECRET:-secret}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -218,6 +218,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana
 
 volumes:

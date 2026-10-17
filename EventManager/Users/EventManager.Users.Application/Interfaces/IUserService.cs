@@ -9,5 +9,7 @@
         Task<string> LoginAsync(string login,
                                 string password,
                                 CancellationToken cancellationToken);
+
+        Task SeedAdminAsync(string login, string password, CancellationToken cancellationToken);
     }
 }

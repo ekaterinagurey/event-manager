@@ -113,6 +113,14 @@ docker compose ps
 dotnet test
 ```
 
+## Учетные записи по умолчанию (Seeding)
+
+При первом запуске и применении миграций система автоматически создает учетную запись администратора для управления сервисом:
+
+Логин: admin
+Пароль: admin123!
+Роль: Admin
+
 # Доступ к интерфейсам и Swagger UI
 
 После запуска интерфейсы Swagger UI и эндпоинты доступны по следующим адресам:
@@ -364,7 +372,7 @@ No available seats for this event
 
 * **Serilog (CompactJsonFormatter)** — структурированное логирование микросервисов в формате JSON.
 * **OpenTelemetry** — автоматический и ручной сбор телеметрии.
-* **Prometheus** — система мониторинга временных рядов. Периодически опрашивает эндпоинты `/metrics` микросервисов (`events-service`, `bookings-service`, `user-service`).
+* **Prometheus** — система мониторинга временных рядов. Периодически опрашивает эндпоинты `/metrics` микросервисов (`events-service`, `bookings-service`, `users-service`).
 * **Jaeger** — распределённый трейсинг запросов между микросервисами, очередями (Kafka) и базой данных. Принимает спаны от OpenTelemetry по протоколу OTLP gRPC.
 * **Grafana** — единый интерфейс визуализации метрик и дашбордов производительности (RPS, Latency p50/p95/p99, активные запросы, процент ошибок).
 
@@ -400,7 +408,7 @@ docker compose up -d prometheus jaeger grafana
 
 1. **Проверка сбора метрик (Prometheus Targets):**
    * http://localhost:9090/targets
-   * Убедитесь, что все микросервисы (`events-service`, `bookings-service`, `user-service`) находятся в состоянии **UP** (зелёные).
+   * Убедитесь, что все микросервисы (`events-service`, `bookings-service`, `users-service`) находятся в состоянии **UP** (зелёные).
 
 2. **Просмотр трейсов (Jaeger):**
    * Выполните любой запрос через Swagger микросервисов

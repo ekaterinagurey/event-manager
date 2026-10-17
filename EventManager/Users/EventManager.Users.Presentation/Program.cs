@@ -39,10 +39,9 @@ builder.Services.AddOpenTelemetry()
         .AddEntityFrameworkCoreInstrumentation()
         .AddOtlpExporter(options =>
         {
-            var endpoint = builder.Configuration["Otlp:Endpoint"];
-            if (!string.IsNullOrWhiteSpace(endpoint))
+            if (!string.IsNullOrWhiteSpace(otlpEndpoint))
             {
-                options.Endpoint = new Uri(endpoint);
+                options.Endpoint = new Uri(otlpEndpoint);
             }
         }))
     .WithMetrics(metrics => metrics
